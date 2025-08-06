@@ -15,7 +15,7 @@ void initGame(int n) {
 
    User u = initUser();
    int **mat;
-   mat = calloc(n, sizeof(int*));
+   mat = calloc(n, sizeof(int*)); //malloc realloc e calloc
    if (mat == NULL)
       exit(EXIT_FAILURE);
 
@@ -25,7 +25,8 @@ void initGame(int n) {
          exit(EXIT_FAILURE);
    }
 
-   mat[generateRandomPosition(n)][generateRandomPosition(n)] = generateRandomNumber(n);
+   insertNumber(mat, n);
+   insertNumber(mat, n);
    printBoard(mat, n);
 
    startGame(u, mat, n);
@@ -40,7 +41,7 @@ void freeMatrix(int **mat, int n) {
 }
 
 int generateRandomPosition(int size) {
-   return (int)(rand() % size);
+   return (rand() % size);
 }
 
 int generateRandomNumber(int size) {
@@ -57,6 +58,17 @@ int generateRandomNumber(int size) {
       return 2;
    else
       return 4;
+}
+
+void insertNumber(int **mat, int size) {
+   int pos1, pos2, num;
+   do {
+      pos1 = generateRandomPosition(size);
+      pos2 = generateRandomPosition(size);
+   } while (mat[pos1][pos2] != 0);
+   num = generateRandomNumber(size);
+
+   mat[pos1][pos2] = num;
 }
 
 User initUser()
@@ -85,25 +97,26 @@ void startGame(User u, int **mat, int size) {
    printBoard(mat, size);
    do {
       printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar (V)>)\n");
-      scanf("%c", &move);
+      scanf(" %c", &move);
       switch (tolower(move)) {
          case 'w':
-            valid = moveUp(mat);
+            valid = moveUp(mat, size);
             if (!valid)
                printf("Movimento inválido!\n");
+               break;
             break;
          case 'a':
-            valid = moveUp(mat);
+            valid = moveUp(mat, size);
             if (!valid)
                printf("Movimento inválido!\n");
             break;
          case 's':
-            valid = moveUp(mat);
+            valid = moveUp(mat, size);
             if (!valid)
                printf("Movimento inválido!\n");
             break;
          case 'd':
-            valid = moveUp(mat);
+            valid = moveUp(mat, size);
             if (!valid)
                printf("Movimento inválido!\n");
             break;
@@ -127,26 +140,33 @@ void startGame(User u, int **mat, int size) {
             printf("Erro! Comando inválido.\n");
             break;
       }
-   } while (!isGameWon(u, mat) || noMovesLeft(u, mat));
+   } while (!isGameWon(u, mat, size) || noMovesLeft(u, mat));
 }
 
-int moveUp(int **mat) {
-   printf("up");
+int moveUp(int **mat, int size) {
+   int emptySpaces = 0;
+   
    return 0;
 }
-int moveDown(int **mat) {
+int moveDown(int **mat, int size) {
    printf("down");
    return 0;
 }
-int moveLeft(int **mat) {
+int moveLeft(int **mat, int size) {
    printf("left");
    return 0;
 }
-int moveRight(int **mat) {
+int moveRight(int **mat, int size) {
    printf("right");
    return 0;
 }
-int isGameWon(User u, int **mat) {
+int isGameWon(User u, int **mat, int size) {
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++)
+         if (mat[i][j] == 2048) {
+            printf("Parabéns! Você ganhou.\n");
+            return 0;
+         }
    return 1;
 }
 int noMovesLeft(User u, int **mat) {
