@@ -11,7 +11,7 @@ void printMainMenu() {
    char opt, sure[4];
    int size;
 
-   printf("----- BEM-VINDO AO JOGO 2048 -----\n");
+   printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
    printf("(R) Sair\n");
    printf("(N) Novo jogo\n");
    printf("\t(4) Jogo padrão 4x4\n");
@@ -37,7 +37,7 @@ void printMainMenu() {
          printMainMenu();
          break;
       case 'N':
-         printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6)");
+         printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6): ");
          scanf("%d", &size);
          initGame(size);
          break;

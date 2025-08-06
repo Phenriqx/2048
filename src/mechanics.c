@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <time.h>
+#include <string.h>
 
 #include "mechanics.h"
 #include "utils.h"
@@ -11,6 +13,7 @@ void initGame(int n) {
       exit(EXIT_FAILURE);
    }
 
+   User u = initUser();
    int **mat;
    mat = calloc(n, sizeof(int*));
    if (mat == NULL)
@@ -23,6 +26,9 @@ void initGame(int n) {
    }
 
    mat[generateRandomPosition(n)][generateRandomPosition(n)] = generateRandomNumber(n);
+   printBoard(mat, n);
+
+   startGame(u, mat, n);
 
    freeMatrix(mat, n);
 }
@@ -34,12 +40,10 @@ void freeMatrix(int **mat, int n) {
 }
 
 int generateRandomPosition(int size) {
-   srand(time(NULL));
    return (int)(rand() % size);
 }
 
 int generateRandomNumber(int size) {
-   srand(time(NULL));
    int threshold;
    if (size == 4)
       threshold = 90;
@@ -53,4 +57,98 @@ int generateRandomNumber(int size) {
       return 2;
    else
       return 4;
+}
+
+User initUser()
+{
+   User u;
+   char str[MAX];
+   getchar();
+   printf("Digite o seu nome: ");
+   fgets(str, MAX, stdin);
+
+   str[strcspn(str, "\n")]  = '\0';
+   strcpy(u.nome, str);
+
+   u.score = 0;
+   u.trades = 0;
+   u.undoMoves = 0;
+
+   return u;
+}
+
+void startGame(User u, int **mat, int size) {
+   char move;
+   int valid;
+
+   printf("\nBem-vindo %s! Vamos começar o jogo.\n\n", u.nome);
+   printBoard(mat, size);
+   do {
+      printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar (V)>)\n");
+      scanf("%c", &move);
+      switch (tolower(move)) {
+         case 'w':
+            valid = moveUp(mat);
+            if (!valid)
+               printf("Movimento inválido!\n");
+            break;
+         case 'a':
+            valid = moveUp(mat);
+            if (!valid)
+               printf("Movimento inválido!\n");
+            break;
+         case 's':
+            valid = moveUp(mat);
+            if (!valid)
+               printf("Movimento inválido!\n");
+            break;
+         case 'd':
+            valid = moveUp(mat);
+            if (!valid)
+               printf("Movimento inválido!\n");
+            break;
+         case 'u':
+            if (u.undoMoves <= 0) {
+               printf("Você tem %d movimentos de refazer jogadas. Atinja 256 pontos para conseguir 1 movimento.\n", u.undoMoves);
+               break;
+            }
+            // undoMove();
+         case 't':
+            if (u.trades <= 0) {
+               printf("Você tem %d movimentos de troca. Atinja 512 para conseguir 1 movimento.\n", u.trades);
+               break;
+            }
+            // tradePiece();
+         case 'v':
+            printf("Voltando ao menu principal e salvando jogo.\n");
+            // saveCurrentGame();
+            // printMainMenu();
+         default:
+            printf("Erro! Comando inválido.\n");
+            break;
+      }
+   } while (!isGameWon(u, mat) || noMovesLeft(u, mat));
+}
+
+int moveUp(int **mat) {
+   printf("up");
+   return 0;
+}
+int moveDown(int **mat) {
+   printf("down");
+   return 0;
+}
+int moveLeft(int **mat) {
+   printf("left");
+   return 0;
+}
+int moveRight(int **mat) {
+   printf("right");
+   return 0;
+}
+int isGameWon(User u, int **mat) {
+   return 1;
+}
+int noMovesLeft(User u, int **mat) {
+   return 0;
 }
