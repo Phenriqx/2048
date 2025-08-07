@@ -44,6 +44,10 @@ void printMainMenu() {
       case 'J':
          break;
       case 'C':
+         char str[MAX];
+         printf("Digite o nome do arquivo para continuar: ");
+         scanf("%s", str);
+         loadGame(str, "r", size);
          break;
       case 'S':
          break;
@@ -64,4 +68,10 @@ void printBoard(int **mat, int size) {
       }
       printf("\n");
    }
+}
+
+void freeMatrix(int **mat, int n) {
+   for (int i = 0; i < n; i++)
+      free(mat[i]);
+   free(mat);
 }

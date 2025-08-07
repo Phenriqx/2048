@@ -15,7 +15,7 @@ void initGame(int n) {
 
    User u = initUser();
    int **mat;
-   mat = calloc(n, sizeof(int*)); //malloc realloc e calloc
+   mat = calloc(n, sizeof(int*)); // calloc inicializa a matriz com valores nulos.
    if (mat == NULL)
       exit(EXIT_FAILURE);
 
@@ -32,12 +32,6 @@ void initGame(int n) {
    startGame(u, mat, n);
 
    freeMatrix(mat, n);
-}
-
-void freeMatrix(int **mat, int n) {
-   for (int i = 0; i < n; i++)
-      free(mat[i]);
-   free(mat);
 }
 
 int generateRandomPosition(int size) {
@@ -65,7 +59,7 @@ void insertNumber(int **mat, int size) {
    do {
       pos1 = generateRandomPosition(size);
       pos2 = generateRandomPosition(size);
-   } while (mat[pos1][pos2] != 0);
+   } while (mat[pos1][pos2] != 0); // Garante que dois números não serão inseridos na mesma posição.
    num = generateRandomNumber(size);
 
    mat[pos1][pos2] = num;
@@ -144,8 +138,17 @@ void startGame(User u, int **mat, int size) {
 }
 
 int moveUp(int **mat, int size) {
-   int emptySpaces = 0;
-   
+   int emptySpaces = 0, temp;
+
+   for (int i = 0; i < size; i++) {
+      int tempColumn[size];
+      for (int j = 0; j < size; j++) 
+         tempColumn[i] = mat[i][j];
+      compactUp(tempColumn, size);
+   }
+
+
+
    return 0;
 }
 int moveDown(int **mat, int size) {
@@ -160,15 +163,70 @@ int moveRight(int **mat, int size) {
    printf("right");
    return 0;
 }
+
 int isGameWon(User u, int **mat, int size) {
+   char opt;
    for (int i = 0; i < size; i++)
       for (int j = 0; j < size; j++)
          if (mat[i][j] == 2048) {
             printf("Parabéns! Você ganhou.\n");
+            printf("Você deseja continuar? (S / N)");
+            scanf(" %c", &opt);
+            switch (toupper(opt)) {
+               case 'S':
+                  printf("Continuando o jogo.\n");
+                  return 1;
+               case 'N':
+                  printf("Saindo do jogo.\n");
+                  break;
+               default:
+                  printf("Opção inválido\n");
+                  break;
+            }
             return 0;
          }
    return 1;
 }
 int noMovesLeft(User u, int **mat) {
    return 0;
+}
+
+void compactUp(int *column, int size) {
+   int write_pos = 0;
+   for (int i = 0; i < size; i++) {
+      if (column[i] != 0) {
+         column[write_pos] = column[i];
+         if (column[write_pos != column[i]])
+            column[i] = 0;
+         write_pos++;
+      }
+   }
+}
+
+void compactDown(int *column, int size) {
+   int write_pos = size - 1;
+   for (int i = size - 1; i >= 0; i--) {
+      if (column[i] != 0) {
+         column[write_pos] = column[i];
+         if (column[write_pos] != column[i])
+            column[i] = 0;
+         write_pos--;
+      }
+   }
+}
+
+void loadGame(char *name, char *mode, int size) {
+   int **lastMove;
+   User u;
+   FILE *file = fopen(name, mode);
+
+   fscanf(file, "%s %d %d %d", u.nome, &u.score, &u.trades, &u.undoMoves);
+
+   for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++) {
+         fscanf("%d", &lastMove[i][j]);
+      }
+   }
+
+   fclose(file);
 }
