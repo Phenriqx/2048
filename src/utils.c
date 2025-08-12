@@ -6,9 +6,14 @@
 #include "utils.h"
 #include "mechanics.h"
 
+void clearTerminal() {
+   system("clear");
+}
+
 // Imprime o menu inicial com as opções de escolha para o usuário
 void printMainMenu() {
-   char opt, sure[4];
+   clearTerminal();
+   char opt, sure;
    int size;
 
    printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
@@ -27,13 +32,15 @@ void printMainMenu() {
    
    switch (toupper(opt)) {
       case 'R':
-         printf("Você deseja realmente sair? ");
+         printf("Você deseja realmente sair? (S/N)");
          getchar();
-         fgets(sure, 4, stdin);
-         if (!strcmp(sure, "Sim")) {
+         scanf("%c", &sure);
+
+         if (tolower(sure) == 's') {
             printf("Saindo do jogo!\n");
             exit(EXIT_FAILURE);
          }
+
          printMainMenu();
          break;
       case 'N':
@@ -47,7 +54,7 @@ void printMainMenu() {
          char str[MAX];
          printf("Digite o nome do arquivo para continuar: ");
          scanf("%s", str);
-         loadGame(str, "r", size);
+         // loadGame(str, "r", size);
          break;
       case 'S':
          break;
@@ -62,6 +69,7 @@ void printMainMenu() {
 }
 
 void printBoard(int **mat, int size) {
+   clearTerminal();
    for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++) {
          printf("[ %d ] ", mat[i][j]);
