@@ -99,23 +99,31 @@ void startGame(User u, int **mat, int size) {
             if (!valid)
                printf("Movimento inválido!\n");
 
+            printBoard(mat, size);
             startGame(u, mat, size);
             break;
          case 'a':
-            valid = moveUp(mat, size, u);
+            valid = moveLeft(mat, size, u);
             if (!valid)
                printf("Movimento inválido!\n");
+
+            printBoard(mat, size);
+            startGame(u, mat, size);
             break;
          case 's':
-            valid = moveUp(mat, size, u);
-            if (!valid)
-               printf("Movimento inválido!\n");
-            break;
-         case 'd':
             valid = moveDown(mat, size, u);
             if (!valid)
                printf("Movimento inválido!\n");
 
+            printBoard(mat, size);
+            startGame(u, mat, size);
+            break;
+         case 'd':
+            valid = moveRight(mat, size, u);
+            if (!valid)
+               printf("Movimento inválido!\n");
+
+            printBoard(mat, size);
             startGame(u, mat, size);
             break;
          case 'u':
@@ -184,17 +192,64 @@ bool moveDown(int **mat, int size, User u) {
    }
 
    insertNumber(mat, size);
-   printBoard(mat, size);
 
    return merged;
 }
+
 bool moveLeft(int **mat, int size, User u) {
-   printf("left");
-   return 0;
+   clearTerminal();
+   bool merged = false;
+
+   int **aux;
+   aux = malloc(size * sizeof(int *));
+   for (int k = 0; k < size; k++) {
+      aux[k] = malloc(size * sizeof(int));
+      if (aux[k] == NULL)
+         exit(EXIT_FAILURE);
+   }
+
+   // Rotaciona a matriz para a esquerda para poder reutilizar a função moveDown();
+   for (int i = 0; i < size; i++) 
+      for (int j = 0; j < size; j++) 
+         aux[size - 1 - j][i] = mat[i][j]; 
+
+   merged = moveDown(aux, size, u);
+
+   // Rotaciona a matriz de volta para a original com os valores já somados pela função moveDown().
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++) 
+         mat[j][size - 1 - i] = aux[i][j];
+
+   freeMatrix(aux, size);
+   return merged;
 }
+
 bool moveRight(int **mat, int size, User u) {
-   printf("right");
-   return 0;
+   clearTerminal();
+   bool merged = false;
+
+   int **aux;
+   aux = malloc(size * sizeof(int*));
+   for (int k = 0; k < size; k++) {
+      aux[k] = malloc(size * sizeof(int));
+      if (aux[k] == NULL)
+         exit(EXIT_FAILURE);
+   }
+
+   // Rotaciona a matriz para a direita e utiliza a função moveDown();
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++) 
+         aux[i][j] = mat[size - 1 - j][i];
+
+   merged = moveDown(aux, size, u);
+
+   // Rotaciona de volta para o original com os valores somados pela função moveDown;
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++) 
+         mat[j][i] = aux[i][size - 1 - j];
+
+   freeMatrix(aux, size);
+   return merged;
 }
 
 int isGameWon(User u, int **mat, int size) {
