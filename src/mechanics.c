@@ -14,7 +14,7 @@ void initGame(int n) {
       exit(EXIT_FAILURE);
    }
 
-   User u = initUser();
+   User *u = initUser();
    int **mat;
    mat = calloc(n, sizeof(int*)); // calloc inicializa a matriz com valores nulos.
    if (mat == NULL)
@@ -66,32 +66,39 @@ void insertNumber(int **mat, int size) {
    mat[pos1][pos2] = num;
 }
 
-User initUser()
+User* initUser()
 {
-   User u;
+   User *u;
    char str[MAX];
    getchar();
    printf("Digite o seu nome: ");
    fgets(str, MAX, stdin);
 
    str[strcspn(str, "\n")]  = '\0';
-   strcpy(u.nome, str);
+   strcpy(u->nome, str);
 
-   u.score = 0;
-   u.trades = 0;
-   u.undoMoves = 0;
+   u->score = 0;
+   u->trades = 0;
+   u->undoMoves = 0;
 
    return u;
 }
 
-void startGame(User u, int **mat, int size) {
+void startGame(User *u, int **mat, int size) {
    char move;
    bool valid;
 
    clearTerminal();
    printBoard(mat, size);
    do {
+      printf("Placar: %d\n", u->score);
+      if (u->undoMoves != 0)
+         printf("Você tem %d chance(s) de desfazer o seu último movimento\n", u->undoMoves);
+      else if (u->trades != 0) 
+         printf("Você tem %d chance(s) de trocar duas peças de posição\n", u->trades);
+
       printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar (V)>)\n");
+
       scanf(" %c", &move);
       switch (tolower(move)) {
          case 'w':
@@ -127,17 +134,23 @@ void startGame(User u, int **mat, int size) {
             startGame(u, mat, size);
             break;
          case 'u':
-            if (u.undoMoves <= 0) {
-               printf("Você tem %d movimentos de refazer jogadas. Atinja 256 pontos para conseguir 1 movimento.\n", u.undoMoves);
+            if (u->undoMoves <= 0) {
+               printf("Você tem %d movimentos de refazer jogadas. Atinja 256 pontos para conseguir 1 movimento.\n", u->undoMoves);
                break;
             }
             // undoMove();
          case 't':
-            if (u.trades <= 0) {
-               printf("Você tem %d movimentos de troca. Atinja 512 para conseguir 1 movimento.\n", u.trades);
+            if (u->trades <= 0) {
+               printf("Você tem %d movimentos de troca. Atinja 512 para conseguir 1 movimento.\n", u->trades);
                break;
             }
-            // tradePiece();
+
+            tradePieces(mat, size);
+            printBoard(mat, size);
+            startGame(u, mat, size);
+            u->trades--;
+
+            break;
          case 'v':
             printf("Voltando ao menu principal e salvando jogo.\n");
             // saveCurrentGame();
@@ -149,7 +162,7 @@ void startGame(User u, int **mat, int size) {
    } while (!isGameWon(u, mat, size) || noMovesLeft(u, mat));
 }
 
-bool moveUp(int **mat, int size, User u) {
+bool moveUp(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
@@ -159,7 +172,12 @@ bool moveUp(int **mat, int size, User u) {
          if (mat[i][j] != 0 && mat[i + 1][j] == mat[i][j]) {
             mat[i][j] *= 2;
             mat[i + 1][j] = 0;
-            u.score += mat[i][j];
+            u->score += mat[i][j];
+
+            if (u->score == 256) 
+               u->undoMoves++;
+            else if (u->score == 8) 
+               u->trades++;
 
             merged = true;
          }
@@ -173,7 +191,7 @@ bool moveUp(int **mat, int size, User u) {
    return merged;
 }
 
-bool moveDown(int **mat, int size, User u) {
+bool moveDown(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
@@ -183,7 +201,12 @@ bool moveDown(int **mat, int size, User u) {
          if (mat[i][j] != 0 && mat[i - 1][j] == mat[i][j]) {
             mat[i][j] *= 2;
             mat[i - 1][j] = 0;
-            u.score += mat[i][j];
+            u->score += mat[i][j];
+
+            if (u->score == 256) 
+               u->undoMoves++;
+            else if (u->score == 8) 
+               u->trades++;
 
             merged = true;
          }
@@ -196,7 +219,7 @@ bool moveDown(int **mat, int size, User u) {
    return merged;
 }
 
-bool moveLeft(int **mat, int size, User u) {
+bool moveLeft(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
@@ -224,7 +247,7 @@ bool moveLeft(int **mat, int size, User u) {
    return merged;
 }
 
-bool moveRight(int **mat, int size, User u) {
+bool moveRight(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
@@ -252,7 +275,7 @@ bool moveRight(int **mat, int size, User u) {
    return merged;
 }
 
-int isGameWon(User u, int **mat, int size) {
+int isGameWon(User *u, int **mat, int size) {
    char opt;
    for (int i = 0; i < size; i++)
       for (int j = 0; j < size; j++)
@@ -277,7 +300,8 @@ int isGameWon(User u, int **mat, int size) {
          }
    return 1;
 }
-int noMovesLeft(User u, int **mat) {
+
+int noMovesLeft(User *u, int **mat) {
    return 0;
 }
 
@@ -301,6 +325,19 @@ void compactDown(int **mat, int columnIdx, int size) {
             mat[i][columnIdx] = 0;
          k--;
       }
+}
+
+void tradePieces(int **mat, int size) {
+   Position p1, p2;
+
+   printf("Informe a posição da peça 1 (x y (0 - %d)): ", size - 1);
+   scanf("%d %d", &p1.x, &p1.y);
+   printf("Informe a posição da peça 2 (x y (0 - %d)): ", size - 1);
+   scanf("%d %d", &p2.x, &p2.y);
+
+   int temp = mat[p1.y][p1.x];
+   mat[p1.y][p1.x] = mat[p2.y][p2.x];
+   mat[p2.y][p2.x] = temp;
 }
 
 // void loadGame(char *name, char *mode, int size) {

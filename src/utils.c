@@ -12,7 +12,6 @@ void clearTerminal() {
 
 // Imprime o menu inicial com as opções de escolha para o usuário
 void printMainMenu() {
-   clearTerminal();
    char opt, sure;
    int size;
 
@@ -61,10 +60,13 @@ void printMainMenu() {
       case 'M':
          break;
       case 'A':
+         gameInstructions();
+         printMainMenu();
          break;
       default:
          printf("Código inválido. Tente novamente\n");
-         break; 
+         printMainMenu();
+         break;
    }
 }
 
@@ -82,4 +84,16 @@ void freeMatrix(int **mat, int n) {
    for (int i = 0; i < n; i++)
       free(mat[i]);
    free(mat);
+}
+
+void gameInstructions() {
+   printf("\nO jogo começa com duas posições aleatórias do tabuleiro preenchidas.\n");
+   printf("A cada jogada, o jogador deve escolher uma direção (para cima, para baixo, para a esquerda ou para a direita).\n");
+   printf("Todas as peças se movem o máximo possível nessa direçãa, algumas se movem mais do que outras.\n"
+          "Duas peças adjacentes (somente nessa direção) com números iguais se combinam em uma contendo a soma desses números.\n");
+   printf("Um movimento é válido quando pelo menos uma peça pode ser movida, inclusive por combinação.\n");
+   printf("Uma nova peça é gerada ao final de cada jogada em uma posição vazia escolhida aleatoriamente (se houver).\n");
+   printf("Na maioria das vezes, um novo 2 deve ser adicinado, mas ocasionalmente (10%% das vezes), um 4.\n");
+   printf("Para vencer, o jogador deve criar uma peça com o número 2048.\n"
+          "O jogador perde se não houver movimentos válidos disponíveis\n\n");
 }
