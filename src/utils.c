@@ -14,6 +14,7 @@ void clearTerminal() {
 
 // Imprime o menu inicial com as opções de escolha para o usuário
 void printMainMenu() {
+   clearTerminal();
    char opt, sure;
    int size;
 
@@ -29,57 +30,67 @@ void printMainMenu() {
    printf("(M) Mostrar Ranking\n");
    printf("(A) Ajuda com as instruções de como jogar\n");
 
-   scanf("%c", &opt);
-   cleanBuffer();
-   int repeatMenu = 0;
+   while (1) {
+      printf("Digite uma opção: ");
+      scanf(" %c", &opt); 
+      cleanBuffer(); 
 
-   do {
       switch (toupper(opt)) {
          case 'R':
             printf("Você deseja realmente sair? (S/N)");
-            scanf("%c", &sure);
+            scanf(" %c", &sure);
             cleanBuffer();
-
             if (tolower(sure) == 's') {
                printf("Saindo do jogo!\n");
-               exit(EXIT_FAILURE);
+               exit(EXIT_SUCCESS);
             }
-
-            printMainMenu();
-            repeatMenu = 1;
+            clearTerminal();
             break;
          case 'N':
             printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6): ");
             scanf("%d", &size);
+            cleanBuffer();
             initGame(size);
-            break;
+            return;
          case 'J':
+            printf("Função 'Continuar jogo' ainda não implementada.\n");
             break;
          case 'C':
             char str[MAX];
             printf("Digite o nome do arquivo para continuar: ");
             scanf("%s", str);
+            cleanBuffer();
             // loadGame(str, "r", size);
             break;
          case 'S':
+            clearTerminal();
+            printf("Função 'Salvar jogo' ainda não implementada.\n");
             break;
          case 'M':
+            clearTerminal();
+            printf("Função 'Mostrar Ranking' ainda não implementada.\n");
             break;
          case 'A':
-         
             clearTerminal();
             gameInstructions();
-            printMainMenu();
-            repeatMenu = 1;
             break;
          default:
+            clearTerminal();
             printf("Código inválido. Tente novamente\n");
-            printMainMenu();
-            repeatMenu = 1;
             break;
       }
-      clearTerminal();
-   } while (repeatMenu);
+      printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
+      printf("(R) Sair\n");
+      printf("(N) Novo jogo\n");
+      printf("\t(4) Jogo padrão 4x4\n");
+      printf("\t(5) Jogo 5x5\n");
+      printf("\t(6) Jogo 6x6\n");
+      printf("(J) Continuar jogo atual\n");
+      printf("(C) Carregar um jogo salvo\n");
+      printf("(S) Salvar o jogo atual\n");
+      printf("(M) Mostrar Ranking\n");
+      printf("(A) Ajuda com as instruções de como jogar\n");
+   }
 }
 
 // Procura o maior dígito no tabuleiro e retorna a quantidade de algarismos presente no número
@@ -214,4 +225,11 @@ void gameInstructions() {
 void cleanBuffer() {
    int ch;
    while ((ch = getchar()) != '\n' && ch != EOF);
+}
+
+void toLowerString(char *str) {
+   size_t len = strlen(str);
+   for (int i = 0; i < len; i++) {
+      str[i] = tolower(str[i]);
+   }
 }

@@ -16,7 +16,7 @@ void initGame(int n) {
 
    User *u = initUser();
    int **mat;
-   mat = calloc(n, sizeof(int*)); // calloc inicializa a matriz com valores nulos.
+   mat = calloc(n, sizeof(int *)); // calloc inicializa a matriz com valores nulos.
    if (mat == NULL)
       exit(EXIT_FAILURE);
 
@@ -32,6 +32,7 @@ void initGame(int n) {
 
    startGame(u, mat, n);
 
+   free(u);
    freeMatrix(mat, n);
 }
 
@@ -66,15 +67,17 @@ void insertNumber(int **mat, int size) {
    mat[pos1][pos2] = num;
 }
 
-User* initUser()
-{
+User *initUser() {
    User *u;
+   u = malloc(sizeof(User));
+   if (u == NULL)
+      exit(EXIT_FAILURE);
+
    char str[MAX];
-   getchar();
    printf("Digite o seu nome: ");
    fgets(str, MAX, stdin);
 
-   str[strcspn(str, "\n")]  = '\0';
+   str[strcspn(str, "\n")] = '\0';
    strcpy(u->nome, str);
 
    u->score = 0;
@@ -85,87 +88,111 @@ User* initUser()
 }
 
 void startGame(User *u, int **mat, int size) {
-   char move;
-   bool valid;
+   char move[MAX];
+   bool moveOccurred;
+   bool gameContinues = true;
 
+   while (gameContinues) {
+      clearTerminal();
+      printBoard(mat, size);
+      printf("\n\tPlacar: %d\tTrocas: %d\tDesfazer movimento: %d\n", u->score, u->trades, u->undoMoves);
+      printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar>)\n");
+
+      do {
+         printf("Movimento: ");
+         fgets(move, MAX, stdin);
+         toLowerString(move);
+         move[strcspn(move, "\n")] = '\0'; 
+         moveOccurred = false;
+
+         if (!strcmp(move, "w")) {
+            moveOccurred = moveUp(mat, size, u);
+         } 
+         else if (!strcmp(move, "a")) {
+            moveOccurred = moveLeft(mat, size, u);
+         } 
+         else if (!strcmp(move, "s")) {
+            moveOccurred = moveDown(mat, size, u);
+         } 
+         else if (!strcmp(move, "d")) {
+            moveOccurred = moveRight(mat, size, u);
+         } 
+         else if (!strcmp(move, "u")) {
+            if (u->undoMoves > 0) {
+               u->undoMoves--;
+               moveOccurred = true;
+            } 
+            else 
+               printf("Você tem %d movimentos de refazer jogadas. Atinja 256 pontos para conseguir 1 movimento.\n", u->undoMoves);
+            
+         } 
+         else if (!strcmp(move, "t")) {
+            if (u->trades > 0) {
+               tradePieces(mat, size);
+               u->trades--;
+               moveOccurred = true;
+            } 
+            else 
+               printf("Você tem %d movimentos de troca. Atinja 512 para conseguir 1 movimento.\n", u->trades);
+         } 
+         else if (!strcmp(move, "voltar")) {
+            printf("Voltando ao menu principal e salvando jogo.\n");
+            printMainMenu();
+         }
+         else 
+            printf("Erro! Comando inválido. Tente novamente.\n");
+         
+         if (!moveOccurred && strcmp(move, "voltar") != 0) {
+            printf("Movimento inválido ou não possível. Tente novamente.\n");
+            printf("Pressione Enter para continuar...");
+            getchar();
+            // Reprint the board after invalid move
+            clearTerminal();
+            printBoard(mat, size);
+            printf("Placar: %d\n", u->score);
+            printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar>)\n");
+         }
+      } while (!moveOccurred);
+      
+      if (isGameWon(u, mat, size) || noMovesLeft(u, mat)) 
+         gameContinues = false; 
+   }
+   
+   // Print final result
    clearTerminal();
    printBoard(mat, size);
-   do {
-      printf("Placar: %d\n", u->score);
-      if (u->undoMoves != 0)
-         printf("Você tem %d chance(s) de desfazer o seu último movimento\n", u->undoMoves);
-      else if (u->trades != 0) 
-         printf("Você tem %d chance(s) de trocar duas peças de posição\n", u->trades);
+   printf("Placar final: %d\n", u->score);
 
-      printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar (V)>)\n");
-
-      scanf(" %c", &move);
-      switch (tolower(move)) {
-         case 'w':
-            valid = moveUp(mat, size, u);
-            if (!valid)
-               printf("Movimento inválido!\n");
-
-            printBoard(mat, size);
-            startGame(u, mat, size);
-            break;
-         case 'a':
-            valid = moveLeft(mat, size, u);
-            if (!valid)
-               printf("Movimento inválido!\n");
-
-            printBoard(mat, size);
-            startGame(u, mat, size);
-            break;
-         case 's':
-            valid = moveDown(mat, size, u);
-            if (!valid)
-               printf("Movimento inválido!\n");
-
-            printBoard(mat, size);
-            startGame(u, mat, size);
-            break;
-         case 'd':
-            valid = moveRight(mat, size, u);
-            if (!valid)
-               printf("Movimento inválido!\n");
-
-            printBoard(mat, size);
-            startGame(u, mat, size);
-            break;
-         case 'u':
-            if (u->undoMoves <= 0) {
-               printf("Você tem %d movimentos de refazer jogadas. Atinja 256 pontos para conseguir 1 movimento.\n", u->undoMoves);
-               break;
-            }
-            // undoMove();
-         case 't':
-            if (u->trades <= 0) {
-               printf("Você tem %d movimentos de troca. Atinja 512 para conseguir 1 movimento.\n", u->trades);
-               break;
-            }
-
-            tradePieces(mat, size);
-            printBoard(mat, size);
-            startGame(u, mat, size);
-            u->trades--;
-
-            break;
-         case 'v':
-            printf("Voltando ao menu principal e salvando jogo.\n");
-            // saveCurrentGame();
-            // printMainMenu();
-         default:
-            printf("Erro! Comando inválido.\n");
-            break;
-      }
-   } while (!isGameWon(u, mat, size) || noMovesLeft(u, mat));
+   if (isGameWon(u, mat, size)) {
+      printf("Parabéns! Você venceu o jogo!\n");
+   } else {
+      printf("Fim de jogo! Não há mais movimentos.\n");
+   }
 }
 
 bool moveUp(int **mat, int size, User *u) {
-   clearTerminal();
-   bool merged = false;
+   bool moved = false;
 
+   // Checa se o movimento é possível
+   for (int j = 0; j < size; j++) {
+      for (int i = 0; i < size - 1; i++) {
+         if (mat[i][j] == 0 && mat[i + 1][j] != 0) {
+            moved = true;
+            break;
+         }
+         if (mat[i][j] != 0 && mat[i][j] == mat[i + 1][j]) {
+            moved = true;
+            break;
+         }
+      }
+      if (moved) 
+         break;
+   }
+
+   if (!moved) 
+      return false;
+
+   // Performa o movimento em si
    for (int j = 0; j < size; j++) {
       compactUp(mat, j, size);
       for (int i = 0; i < size - 1; i++) {
@@ -174,27 +201,41 @@ bool moveUp(int **mat, int size, User *u) {
             mat[i + 1][j] = 0;
             u->score += mat[i][j];
 
-            if (u->score == 256) 
+            if (mat[i][j] == 256)
                u->undoMoves++;
-            else if (u->score == 8) 
+            if (mat[i][j] == 512)
                u->trades++;
-
-            merged = true;
          }
       }
       compactUp(mat, j, size);
    }
 
    insertNumber(mat, size);
-   printBoard(mat, size);
-
-   return merged;
+   return true;
 }
 
 bool moveDown(int **mat, int size, User *u) {
-   clearTerminal();
-   bool merged = false;
+   bool moved = false;
 
+   for (int j = 0; j < size; j++) {
+      for (int i = size - 1; i > 0; i--) {
+         if (mat[i][j] == 0 && mat[i - 1][j] != 0) {
+            moved = true;
+            break;
+         }
+         if (mat[i][j] != 0 && mat[i][j] == mat[i - 1][j]) {
+            moved = true;
+            break;
+         }
+      }
+      if (moved) 
+         break;
+   }
+
+   if (!moved) 
+      return false;
+
+   // Perform the actual movement
    for (int j = 0; j < size; j++) {
       compactDown(mat, j, size);
       for (int i = size - 1; i > 0; i--) {
@@ -203,20 +244,17 @@ bool moveDown(int **mat, int size, User *u) {
             mat[i - 1][j] = 0;
             u->score += mat[i][j];
 
-            if (u->score == 256) 
+            if (mat[i][j] == 256)
                u->undoMoves++;
-            else if (u->score == 8) 
+            if (mat[i][j] == 512)
                u->trades++;
-
-            merged = true;
          }
       }
       compactDown(mat, j, size);
    }
 
    insertNumber(mat, size);
-
-   return merged;
+   return true;
 }
 
 bool moveLeft(int **mat, int size, User *u) {
@@ -232,15 +270,15 @@ bool moveLeft(int **mat, int size, User *u) {
    }
 
    // Rotaciona a matriz para a esquerda para poder reutilizar a função moveDown();
-   for (int i = 0; i < size; i++) 
-      for (int j = 0; j < size; j++) 
-         aux[size - 1 - j][i] = mat[i][j]; 
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++)
+         aux[size - 1 - j][i] = mat[i][j];
 
    merged = moveDown(aux, size, u);
 
    // Rotaciona a matriz de volta para a original com os valores já somados pela função moveDown().
    for (int i = 0; i < size; i++)
-      for (int j = 0; j < size; j++) 
+      for (int j = 0; j < size; j++)
          mat[j][size - 1 - i] = aux[i][j];
 
    freeMatrix(aux, size);
@@ -252,7 +290,7 @@ bool moveRight(int **mat, int size, User *u) {
    bool merged = false;
 
    int **aux;
-   aux = malloc(size * sizeof(int*));
+   aux = malloc(size * sizeof(int *));
    for (int k = 0; k < size; k++) {
       aux[k] = malloc(size * sizeof(int));
       if (aux[k] == NULL)
@@ -261,14 +299,14 @@ bool moveRight(int **mat, int size, User *u) {
 
    // Rotaciona a matriz para a direita e utiliza a função moveDown();
    for (int i = 0; i < size; i++)
-      for (int j = 0; j < size; j++) 
+      for (int j = 0; j < size; j++)
          aux[i][j] = mat[size - 1 - j][i];
 
    merged = moveDown(aux, size, u);
 
    // Rotaciona de volta para o original com os valores somados pela função moveDown;
    for (int i = 0; i < size; i++)
-      for (int j = 0; j < size; j++) 
+      for (int j = 0; j < size; j++)
          mat[j][i] = aux[i][size - 1 - j];
 
    freeMatrix(aux, size);
@@ -295,10 +333,10 @@ int isGameWon(User *u, int **mat, int size) {
                default:
                   printf("Opção inválido\n");
                   break;
-            }
-            return 0;
+               }
+            return 1;
          }
-   return 1;
+   return 0;
 }
 
 int noMovesLeft(User *u, int **mat) {
@@ -307,11 +345,11 @@ int noMovesLeft(User *u, int **mat) {
 
 void compactUp(int **mat, int columnIdx, int size) {
    int k = 0;
-   for (int i = 0; i < size; i++) 
+   for (int i = 0; i < size; i++)
       if (mat[i][columnIdx] != 0) {
          mat[k][columnIdx] = mat[i][columnIdx];
          if (i != k)
-            mat[i][columnIdx] = 0;   
+            mat[i][columnIdx] = 0;
          k++;
       }
 }
