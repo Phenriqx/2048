@@ -11,19 +11,23 @@
 void initGame(int n) {
    if (n < 4 || n > 6) {
       printf("Tamanho do tabuleiro não pode ser menor que 4 nem maior que 6.\n");
-      exit(EXIT_FAILURE);
+      return;
    }
 
    User *u = initUser();
    int **mat;
    mat = calloc(n, sizeof(int *)); // calloc inicializa a matriz com valores nulos.
-   if (mat == NULL)
+   if (mat == NULL) {
+      free(mat);
       exit(EXIT_FAILURE);
+   }
 
    for (int i = 0; i < n; i++) {
       mat[i] = calloc(n, sizeof(int));
-      if (mat[i] == NULL)
+      if (mat[i] == NULL) {
+         free(mat[i]);
          exit(EXIT_FAILURE);
+      }
    }
 
    insertNumber(mat, n);
@@ -70,8 +74,10 @@ void insertNumber(int **mat, int size) {
 User *initUser() {
    User *u;
    u = malloc(sizeof(User));
-   if (u == NULL)
+   if (u == NULL) {
+      free(u);
       exit(EXIT_FAILURE);
+   }
 
    char str[MAX];
    printf("Digite o seu nome: ");
@@ -206,7 +212,7 @@ void startGame(User *u, int **mat, int size) {
       }
       while (!moveOccurred);
 
-      if (isGameWon(u, mat, size) || noMovesLeft(u, mat))
+      if (isGameWon(u, mat, size) || noMovesLeft(u, mat, size))
          gameContinues = false;
    }
    
@@ -290,7 +296,6 @@ bool moveDown(int **mat, int size, User *u) {
    if (!moved) 
       return false;
 
-   // Perform the actual movement
    for (int j = 0; j < size; j++) {
       compactDown(mat, j, size);
       for (int i = size - 1; i > 0; i--) {
@@ -318,10 +323,16 @@ bool moveLeft(int **mat, int size, User *u) {
 
    int **aux;
    aux = malloc(size * sizeof(int *));
+   if (aux == NULL) {
+      free(aux);
+      exit(EXIT_FAILURE);
+   }
    for (int k = 0; k < size; k++) {
       aux[k] = malloc(size * sizeof(int));
-      if (aux[k] == NULL)
+      if (aux[k] == NULL) {
+         free(aux[k]);
          exit(EXIT_FAILURE);
+      }
    }
 
    // Rotaciona a matriz para a esquerda para poder reutilizar a função moveDown();
@@ -346,10 +357,16 @@ bool moveRight(int **mat, int size, User *u) {
 
    int **aux;
    aux = malloc(size * sizeof(int *));
+   if (aux == NULL) {
+      free(aux);
+      exit(EXIT_FAILURE);
+   }
    for (int k = 0; k < size; k++) {
       aux[k] = malloc(size * sizeof(int));
-      if (aux[k] == NULL)
+      if (aux[k] == NULL) {
+         free(aux[k]);
          exit(EXIT_FAILURE);
+      }
    }
 
    // Rotaciona a matriz para a direita e utiliza a função moveDown();
@@ -394,8 +411,32 @@ int isGameWon(User *u, int **mat, int size) {
    return 0;
 }
 
-int noMovesLeft(User *u, int **mat) {
-   return 0;
+bool noMovesLeft(User *u, int **mat, int size) {
+   if (checkEmptySpaces(mat, size)) // Se existir um espaço vazio no tabuleiro, então o jogo não acabou, noMovesLeft retorna falso.
+      return false;
+
+   // Procura por merges horizontais
+   for (int i = 0; i < size; i++) 
+      for (int j = 0; j < size - 1; j++) 
+         if (mat[i][j] == mat[i][j+1]) 
+            return false; 
+
+   // Procura por merges verticais
+   for (int j = 0; j < size; j++) 
+      for (int i = 0; i < size - 1; i++) 
+         if (mat[i][j] == mat[i+1][j]) 
+            return false; 
+         
+   return true; // Se não há nenhum espaço e nenhum merge disponível, então o jogo acabou.
+}
+
+bool checkEmptySpaces(int **mat, int size) {
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++)
+         if (mat[i][j] == 0)
+            return true;
+
+   return false; // Retorna falso se nenhum espaço no tabuleiro for 0;
 }
 
 void compactUp(int **mat, int columnIdx, int size) {
@@ -439,12 +480,16 @@ void tradePieces(int **mat, User *u) {
 
 int** undoMovement(int **mat, int size) {
    int **copy = malloc(size * sizeof(int *));
-   if (copy == NULL)
+   if (copy == NULL) {
+      free(copy);
       exit(EXIT_FAILURE);
+   }
    for (int i = 0; i < size; i++) {
       copy[i] = malloc(size * sizeof(int));
-      if (copy[i] == NULL)
+      if (copy[i] == NULL) {
+         free(copy[i]);
          exit(EXIT_FAILURE);
+      }
    }
 
    for (int i = 0; i < size; i++)

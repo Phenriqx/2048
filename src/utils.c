@@ -42,7 +42,7 @@ void printMainMenu() {
             cleanBuffer();
             if (tolower(sure) == 's') {
                printf("Saindo do jogo!\n");
-               exit(EXIT_SUCCESS);
+               return;
             }
             clearTerminal();
             break;
