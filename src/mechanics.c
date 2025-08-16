@@ -91,6 +91,8 @@ void startGame(User *u, int **mat, int size) {
    char move[MAX];
    bool moveOccurred;
    bool gameContinues = true;
+   int **previousState = NULL;
+   int previousScore = u->score;
 
    while (gameContinues) {
       clearTerminal();
@@ -106,20 +108,68 @@ void startGame(User *u, int **mat, int size) {
          moveOccurred = false;
 
          if (!strcmp(move, "w")) {
+            if (previousState != NULL)
+               freeMatrix(previousState, size);
+            previousState = undoMovement(mat, size);
+            previousScore = u->score;
+
             moveOccurred = moveUp(mat, size, u);
-         } 
+
+            if (!moveOccurred) {
+               freeMatrix(previousState, size);
+               previousState = NULL;
+            }
+         }
          else if (!strcmp(move, "a")) {
+            if (previousState != NULL)
+               freeMatrix(previousState, size);
+            previousState = undoMovement(mat, size);
+            previousScore = u->score;
+
             moveOccurred = moveLeft(mat, size, u);
+
+            if (!moveOccurred) {
+               freeMatrix(previousState, size);
+               previousState = NULL;
+            }
          } 
          else if (!strcmp(move, "s")) {
+            if (previousState != NULL)
+               freeMatrix(previousState, size);
+            previousState = undoMovement(mat, size);
+            previousScore = u->score;
+
             moveOccurred = moveDown(mat, size, u);
+
+            if (!moveOccurred) {
+               freeMatrix(previousState, size);
+               previousState = NULL;
+            }
          } 
          else if (!strcmp(move, "d")) {
+            if (previousState != NULL)
+               freeMatrix(previousState, size);
+            previousState = undoMovement(mat, size);
+            previousScore = u->score;
+
             moveOccurred = moveRight(mat, size, u);
+
+            if (!moveOccurred) {
+               freeMatrix(previousState, size);
+               previousState = NULL;
+            }
          } 
          else if (!strcmp(move, "u")) {
-            if (u->undoMoves > 0) {
+            if (u->undoMoves > 0 && previousState != NULL) {
+               for (int i = 0; i < size; i++)
+                  for (int j = 0; j < size; j++)
+                     mat[i][j] = previousState[i][j];
+
                u->undoMoves--;
+               u->score = previousScore;
+               freeMatrix(previousState, size);
+               previousState = NULL;
+
                moveOccurred = true;
             } 
             else 
@@ -136,6 +186,8 @@ void startGame(User *u, int **mat, int size) {
          } 
          else if (!strcmp(move, "voltar")) {
             printf("Voltando ao menu principal e salvando jogo.\n");
+            if (previousState != NULL)
+               freeMatrix(previousState, size);
             printMainMenu();
          }
          else 
@@ -151,12 +203,16 @@ void startGame(User *u, int **mat, int size) {
             printf("Placar: %d\n", u->score);
             printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar>)\n");
          }
-      } while (!moveOccurred);
-      
-      if (isGameWon(u, mat, size) || noMovesLeft(u, mat)) 
-         gameContinues = false; 
+      }
+      while (!moveOccurred);
+
+      if (isGameWon(u, mat, size) || noMovesLeft(u, mat))
+         gameContinues = false;
    }
    
+   if (previousState != NULL)
+      freeMatrix(previousState, size);
+
    // Print final result
    clearTerminal();
    printBoard(mat, size);
@@ -202,7 +258,7 @@ bool moveUp(int **mat, int size, User *u) {
 
             if (mat[i][j] == 256)
                u->undoMoves++;
-            if (mat[i][j] == 8)
+            if (mat[i][j] == 512)
                u->trades++;
          }
       }
@@ -245,7 +301,7 @@ bool moveDown(int **mat, int size, User *u) {
 
             if (mat[i][j] == 256)
                u->undoMoves++;
-            if (mat[i][j] == 8)
+            if (mat[i][j] == 512)
                u->trades++;
          }
       }
@@ -379,6 +435,23 @@ void tradePieces(int **mat, User *u) {
    mat[row2][col2] = temp;
 
    u->trades--;
+}
+
+int** undoMovement(int **mat, int size) {
+   int **copy = malloc(size * sizeof(int *));
+   if (copy == NULL)
+      exit(EXIT_FAILURE);
+   for (int i = 0; i < size; i++) {
+      copy[i] = malloc(size * sizeof(int));
+      if (copy[i] == NULL)
+         exit(EXIT_FAILURE);
+   }
+
+   for (int i = 0; i < size; i++)
+      for (int j = 0; j < size; j++)
+         copy[i][j] = mat[i][j];
+
+   return copy;
 }
 
 // void loadGame(char *name, char *mode, int size) {

@@ -29,6 +29,7 @@ void compactDown(int **mat, int columnIdx, int size);
 int isGameWon(User *u, int **mat, int size);
 int noMovesLeft(User *u, int **mat);
 void tradePieces(int **mat, User *u);
+int **undoMovement(int **mat, int size);
 // void loadGame(char *name, char *mode, int size);
 User* initUser();
 
