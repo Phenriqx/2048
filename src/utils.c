@@ -113,7 +113,7 @@ void printBoard(int **mat, int size) {
    int maxDigits = getMaxDigits(mat, size);
    int cellWidth = maxDigits + 2;
 
-   printf("     "); 
+   printf("  "); 
    for (int j = 0; j < size; j++)
       printf("%*d", cellWidth + 1, j + 1); // O "%-*d" é uma sintaxe para formatação dinâmica. O * indica a largura total que o número ocupa, que nesse caso seria o cellWidth + 1;
 

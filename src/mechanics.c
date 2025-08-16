@@ -128,8 +128,7 @@ void startGame(User *u, int **mat, int size) {
          } 
          else if (!strcmp(move, "t")) {
             if (u->trades > 0) {
-               tradePieces(mat, size);
-               u->trades--;
+               tradePieces(mat, u);
                moveOccurred = true;
             } 
             else 
@@ -203,7 +202,7 @@ bool moveUp(int **mat, int size, User *u) {
 
             if (mat[i][j] == 256)
                u->undoMoves++;
-            if (mat[i][j] == 512)
+            if (mat[i][j] == 8)
                u->trades++;
          }
       }
@@ -246,7 +245,7 @@ bool moveDown(int **mat, int size, User *u) {
 
             if (mat[i][j] == 256)
                u->undoMoves++;
-            if (mat[i][j] == 512)
+            if (mat[i][j] == 8)
                u->trades++;
          }
       }
@@ -365,17 +364,21 @@ void compactDown(int **mat, int columnIdx, int size) {
       }
 }
 
-void tradePieces(int **mat, int size) {
+void tradePieces(int **mat, User *u) {
    Position p1, p2;
+   printf("Insira as posições a localização das peças para mudar de posição: ");
+   scanf("%c%d %c%d", &p1.row, &p1.column, &p2.row, &p2.column);
+   getchar();
 
-   printf("Informe a posição da peça 1 (x y (0 - %d)): ", size - 1);
-   scanf("%d %d", &p1.x, &p1.y);
-   printf("Informe a posição da peça 2 (x y (0 - %d)): ", size - 1);
-   scanf("%d %d", &p2.x, &p2.y);
+   // Calcula a linha subtraindo o input com A, logo se pos1 = B1, a linha será B - A = 1;
+   int row1 = toupper(p1.row) - 'A', row2 = toupper(p2.row) - 'A';
+   int col1 = p1.column - 1, col2 = p2.column - 1;
 
-   int temp = mat[p1.y][p1.x];
-   mat[p1.y][p1.x] = mat[p2.y][p2.x];
-   mat[p2.y][p2.x] = temp;
+   int temp = mat[row1][col1];
+   mat[row1][col1] = mat[row2][col2];
+   mat[row2][col2] = temp;
+
+   u->trades--;
 }
 
 // void loadGame(char *name, char *mode, int size) {
