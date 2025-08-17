@@ -192,6 +192,7 @@ void startGame(User *u, int **mat, int size) {
          } 
          else if (!strcmp(move, "voltar")) {
             printf("Voltando ao menu principal e salvando jogo.\n");
+            saveTempData(mat, previousState, size, u);
             if (previousState != NULL)
                freeMatrix(previousState, size);
             printMainMenu();
@@ -321,19 +322,7 @@ bool moveLeft(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
-   int **aux;
-   aux = malloc(size * sizeof(int *));
-   if (aux == NULL) {
-      free(aux);
-      exit(EXIT_FAILURE);
-   }
-   for (int k = 0; k < size; k++) {
-      aux[k] = malloc(size * sizeof(int));
-      if (aux[k] == NULL) {
-         free(aux[k]);
-         exit(EXIT_FAILURE);
-      }
-   }
+   int **aux = createMatrix(size);
 
    // Rotaciona a matriz para a esquerda para poder reutilizar a função moveDown();
    for (int i = 0; i < size; i++)
@@ -355,19 +344,7 @@ bool moveRight(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
-   int **aux;
-   aux = malloc(size * sizeof(int *));
-   if (aux == NULL) {
-      free(aux);
-      exit(EXIT_FAILURE);
-   }
-   for (int k = 0; k < size; k++) {
-      aux[k] = malloc(size * sizeof(int));
-      if (aux[k] == NULL) {
-         free(aux[k]);
-         exit(EXIT_FAILURE);
-      }
-   }
+   int **aux = createMatrix(size);
 
    // Rotaciona a matriz para a direita e utiliza a função moveDown();
    for (int i = 0; i < size; i++)
@@ -479,18 +456,7 @@ void tradePieces(int **mat, User *u) {
 }
 
 int** undoMovement(int **mat, int size) {
-   int **copy = malloc(size * sizeof(int *));
-   if (copy == NULL) {
-      free(copy);
-      exit(EXIT_FAILURE);
-   }
-   for (int i = 0; i < size; i++) {
-      copy[i] = malloc(size * sizeof(int));
-      if (copy[i] == NULL) {
-         free(copy[i]);
-         exit(EXIT_FAILURE);
-      }
-   }
+   int **copy = createMatrix(size);
 
    for (int i = 0; i < size; i++)
       for (int j = 0; j < size; j++)
@@ -499,18 +465,81 @@ int** undoMovement(int **mat, int size) {
    return copy;
 }
 
-// void loadGame(char *name, char *mode, int size) {
-//    int **lastMove;
-//    User u;
-//    FILE *file = fopen(name, mode);
+GameInfo* readData() {
+   char arquivo[MAX];
+   GameInfo *g;
+   g = malloc(sizeof(GameInfo));
+   if (g == NULL)
+      exit(EXIT_FAILURE);
 
-//    fscanf(file, "%s %d %d %d", u.nome, &u.score, &u.trades, &u.undoMoves);
+   printf("Insira o nome do arquivo a ser lido: ");
+   scanf("%s", arquivo);
+   FILE *file = fopen(arquivo, "r");
+   if (file == NULL) {
+      perror("Erro ao abrir o arquivo.\n");
+      exit(EXIT_FAILURE);
+   }
 
-//    for (int i = 0; i < size; i++) {
-//       for (int j = 0; j < size; j++) {
-//          fscanf("%d", lastMove[i][j]);
-//       }
-//    }
+   fscanf(file, "%d %d %d", &g->size, &g->user.undoMoves, &g->user.trades);
+   fscanf(file, "%d %s", &g->user.score, g->user.nome);
 
-//    fclose(file);
-// }
+   g->mat = createMatrix(g->size);
+   for (int i = 0; i < g->size; i++) {
+      for (int j = 0; j < g->size; j++) {
+         fscanf(file, "%d", &g->mat[i][j]);
+      }
+   }
+
+   g->previousState = createMatrix(g->size);
+   for (int i = 0; i < g->size; i++) {
+      for (int j = 0; j < g->size; j++) {
+         fscanf(file, "%d", &g->previousState[i][j]);
+      }
+   }
+
+   fclose(file);
+   return g;
+}
+
+// Salva o estado do jogo quando o usuário seleciona para voltar ao menu durante o jogo.
+void saveTempData(int **mat, int **previousState, int size, User *u) {
+   FILE *file = fopen("temp.txt", "w");
+   if (file == NULL) {
+      return;
+   }
+
+   fprintf(file, "%d %d %d\n", size, u->undoMoves, u->trades);
+   fprintf(file, "%d %s\n", u->score, u->nome);
+
+   for (int i = 0; i < size; i++) {
+      for (int j = 0; j < size; j++)
+         if (mat[i][j] != 0)
+            fprintf(file, "%d ", mat[i][j]);
+         else
+            fprintf(file, "0 ");
+      fprintf(file, "\n");
+   }
+
+   // Se não houver movimento anterior, exemplo: é o primeiro movimento do usuário. Então salva a última jogada como sendo a primeira.
+   if (previousState == NULL)
+      for (int i = 0; i < size; i++) {
+         for (int j = 0; j < size; j++)
+            if (mat[i][j] != 0)
+               fprintf(file, "%d ", mat[i][j]);
+            else
+               fprintf(file, "0 ");
+         fprintf(file, "\n");
+      }
+   
+    else
+      for (int i = 0; i < size; i++) {
+         for (int j = 0; j < size; j++)
+            if (previousState[i][j] != 0)
+               fprintf(file, "%d ", previousState[i][j]);
+            else
+               fprintf(file, "0 ");
+         fprintf(file, "\n");
+      }
+
+   fclose(file);
+}

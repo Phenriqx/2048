@@ -6,5 +6,6 @@
 
 int main() {
    srand(time(NULL));
+   deleteFileIfExists("temp.txt");
    printMainMenu();
 }

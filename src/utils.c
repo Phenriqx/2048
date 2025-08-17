@@ -37,12 +37,12 @@ void printMainMenu() {
 
       switch (toupper(opt)) {
          case 'R':
-            printf("Você deseja realmente sair? (S/N)");
+            printf("Você deseja realmente sair? (S/N) ");
             scanf(" %c", &sure);
             cleanBuffer();
             if (tolower(sure) == 's') {
                printf("Saindo do jogo!\n");
-               return;
+               exit(EXIT_SUCCESS);
             }
             clearTerminal();
             break;
@@ -51,16 +51,23 @@ void printMainMenu() {
             scanf("%d", &size);
             cleanBuffer();
             initGame(size);
-            return;
+            break;
          case 'J':
-            printf("Função 'Continuar jogo' ainda não implementada.\n");
+            printf("Voltando ao jogo anterior!\n");
+            GameInfo *g = readData();
+            startGame(&g->user, g->mat, g->size);
+            freeMatrix(g->mat, g->size);
+            freeMatrix(g->previousState, g->size);
+            free(&g->user);
+            free(g);
             break;
          case 'C':
-            char str[MAX];
-            printf("Digite o nome do arquivo para continuar: ");
-            scanf("%s", str);
-            cleanBuffer();
-            // loadGame(str, "r", size);
+            g = readData();
+            startGame(&g->user, g->mat, g->size);
+            freeMatrix(g->mat, g->size);
+            freeMatrix(g->previousState, g->size);
+            free(&g->user);
+            free(g);
             break;
          case 'S':
             clearTerminal();
@@ -204,6 +211,24 @@ char* getPieceColor(int value) {
    }
 }
 
+int** createMatrix(int size) {
+   int **mat;
+   mat = malloc(size * sizeof(int *));
+   if (mat == NULL) {
+      free(mat);
+      exit(EXIT_FAILURE);
+   }
+   for (int i = 0; i < size; i++) {
+      mat[i] = malloc(size * sizeof(int));
+      if(mat[i] == NULL) {
+         freeMatrix(mat, size);
+         exit(EXIT_FAILURE);
+      }
+   }
+
+   return mat;
+}
+
 void freeMatrix(int **mat, int n) {
    for (int i = 0; i < n; i++)
       free(mat[i]);
@@ -232,4 +257,14 @@ void toLowerString(char *str) {
    for (int i = 0; i < len; i++) {
       str[i] = tolower(str[i]);
    }
+}
+
+void deleteFileIfExists(const char* filename) {
+   FILE *file = fopen(filename, "r");
+   if (file != NULL) {
+      fclose(file);
+      if (remove(filename) == 0) {}
+      else {}
+   }
+   else {}
 }

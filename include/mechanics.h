@@ -5,6 +5,8 @@
 #define MAX 64
 #endif
 
+#include <stdbool.h>
+
 typedef struct {
     char nome[MAX];
     int score, trades, undoMoves;
@@ -14,6 +16,12 @@ typedef struct {
     char row;
     int column;
 } Position;
+
+typedef struct {
+    User user;
+    int size;
+    int **mat, **previousState;
+} GameInfo;
 
 void initGame(int n);
 int generateRandomPosition(int size);
@@ -32,6 +40,8 @@ bool checkEmptySpaces(int **mat, int size);
 void tradePieces(int **mat, User *u);
 int **undoMovement(int **mat, int size);
 // void loadGame(char *name, char *mode, int size);
-User* initUser();
+void saveTempData(int **mat, int **previousState, int size, User *u);
+GameInfo *readData();
+User *initUser();
 
 #endif
