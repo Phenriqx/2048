@@ -23,10 +23,21 @@ typedef struct {
     int **mat, **previousState;
 } GameInfo;
 
-void initGame(int n);
+typedef struct {
+    char name[MAX];
+    int score;
+} RankingEntry;
+
+typedef struct {
+    RankingEntry ranking4x4[10];
+    RankingEntry ranking5x5[10];
+    RankingEntry ranking6x6[10];
+} Ranking;
+
+void initGame(int n, Ranking *ranking);
+void startGame(User *u, int **mat, int size, Ranking *ranking);
 int generateRandomPosition(int size);
 int generateRandomNumber(int size);
-void startGame(User *u, int **mat, int size);
 void insertNumber(int **mat, int size);
 bool moveUp(int **mat, int size, User *u);
 bool moveDown(int **mat, int size, User *u);
@@ -39,9 +50,8 @@ bool noMovesLeft(User *u, int **mat, int size);
 bool checkEmptySpaces(int **mat, int size);
 void tradePieces(int **mat, User *u);
 int **undoMovement(int **mat, int size);
-// void loadGame(char *name, char *mode, int size);
-void saveTempData(int **mat, int **previousState, int size, User *u);
-GameInfo *readData();
+void saveData(int **mat, int **previousState, int size, User *u, const char* filename);
+GameInfo* readData(const char *filename);
 User *initUser();
 
 #endif

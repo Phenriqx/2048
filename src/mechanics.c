@@ -8,7 +8,7 @@
 #include "mechanics.h"
 #include "utils.h"
 
-void initGame(int n) {
+void initGame(int n, Ranking *ranking) {
    if (n < 4 || n > 6) {
       printf("Tamanho do tabuleiro não pode ser menor que 4 nem maior que 6.\n");
       return;
@@ -34,7 +34,7 @@ void initGame(int n) {
    insertNumber(mat, n);
    printBoard(mat, n);
 
-   startGame(u, mat, n);
+   startGame(u, mat, n, ranking);
 
    free(u);
    freeMatrix(mat, n);
@@ -93,12 +93,13 @@ User *initUser() {
    return u;
 }
 
-void startGame(User *u, int **mat, int size) {
+void startGame(User *u, int **mat, int size, Ranking *ranking) {
    char move[MAX];
    bool moveOccurred;
    bool gameContinues = true;
    int **previousState = NULL;
    int previousScore = u->score;
+   int counter = 0;
 
    while (gameContinues) {
       clearTerminal();
@@ -192,10 +193,10 @@ void startGame(User *u, int **mat, int size) {
          } 
          else if (!strcmp(move, "voltar")) {
             printf("Voltando ao menu principal e salvando jogo.\n");
-            saveTempData(mat, previousState, size, u);
+            saveData(mat, previousState, size, u, "temp.txt");
             if (previousState != NULL)
                freeMatrix(previousState, size);
-            printMainMenu();
+            printMainMenu(ranking);
          }
          else 
             printf("Erro! Comando inválido. Tente novamente.\n");
@@ -214,22 +215,26 @@ void startGame(User *u, int **mat, int size) {
       while (!moveOccurred);
 
       if (isGameWon(u, mat, size) || noMovesLeft(u, mat, size))
-         gameContinues = false;
+         if (isGameWon(u, mat, size) && counter < 1) {
+            gameContinues = askUser();
+            counter++;
+         }
    }
    
    if (previousState != NULL)
       freeMatrix(previousState, size);
+}
 
-   // Print final result
-   clearTerminal();
-   printBoard(mat, size);
-   printf("Placar final: %d\n", u->score);
+bool askUser() {
+   char opt;
+   printf("Você deseja continuar o jogo? (S/N) ");
+   scanf("%c", &opt);
+   cleanBuffer();
 
-   if (isGameWon(u, mat, size)) {
-      printf("Parabéns! Você venceu o jogo!\n");
-   } else {
-      printf("Fim de jogo! Não há mais movimentos.\n");
-   }
+   if (tolower(opt) == 's') 
+      return true;
+   else
+      return false;
 }
 
 bool moveUp(int **mat, int size, User *u) {
@@ -363,26 +368,9 @@ bool moveRight(int **mat, int size, User *u) {
 }
 
 int isGameWon(User *u, int **mat, int size) {
-   char opt;
    for (int i = 0; i < size; i++)
       for (int j = 0; j < size; j++)
          if (mat[i][j] == 2048) {
-            printf("Parabéns! Você ganhou.\n");
-            printf("Você deseja continuar? (S / N)");
-            scanf(" %c", &opt);
-            switch (toupper(opt)) {
-               case 'S':
-                  printf("Continuando o jogo.\n");
-                  clearTerminal();
-                  return 1;
-               case 'N':
-                  printf("Saindo do jogo.\n");
-                  clearTerminal();
-                  break;
-               default:
-                  printf("Opção inválido\n");
-                  break;
-               }
             return 1;
          }
    return 0;
@@ -465,16 +453,13 @@ int** undoMovement(int **mat, int size) {
    return copy;
 }
 
-GameInfo* readData() {
-   char arquivo[MAX];
+GameInfo* readData(const char* filename) {
    GameInfo *g;
    g = malloc(sizeof(GameInfo));
    if (g == NULL)
       exit(EXIT_FAILURE);
 
-   printf("Insira o nome do arquivo a ser lido: ");
-   scanf("%s", arquivo);
-   FILE *file = fopen(arquivo, "r");
+   FILE *file = fopen(filename, "r");
    if (file == NULL) {
       perror("Erro ao abrir o arquivo.\n");
       exit(EXIT_FAILURE);
@@ -501,9 +486,9 @@ GameInfo* readData() {
    return g;
 }
 
-// Salva o estado do jogo quando o usuário seleciona para voltar ao menu durante o jogo.
-void saveTempData(int **mat, int **previousState, int size, User *u) {
-   FILE *file = fopen("temp.txt", "w");
+
+void saveData(int **mat, int **previousState, int size, User *u, const char* filename) {
+   FILE *file = fopen(filename, "w");
    if (file == NULL) {
       return;
    }
@@ -543,3 +528,7 @@ void saveTempData(int **mat, int **previousState, int size, User *u) {
 
    fclose(file);
 }
+
+void loadRanking(Ranking *ranking);
+void saveRanking(Ranking *ranking);
+void printRanking(Ranking *ranking);

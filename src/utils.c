@@ -13,9 +13,10 @@ void clearTerminal() {
 }
 
 // Imprime o menu inicial com as opções de escolha para o usuário
-void printMainMenu() {
+void printMainMenu(Ranking *ranking) {
    clearTerminal();
    char opt, sure;
+
    int size;
 
    printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
@@ -44,38 +45,54 @@ void printMainMenu() {
                printf("Saindo do jogo!\n");
                exit(EXIT_SUCCESS);
             }
+
             clearTerminal();
             break;
          case 'N':
             printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6): ");
             scanf("%d", &size);
             cleanBuffer();
-            initGame(size);
+            initGame(size, ranking);
             break;
          case 'J':
             printf("Voltando ao jogo anterior!\n");
-            GameInfo *g = readData();
-            startGame(&g->user, g->mat, g->size);
+            GameInfo *g = readData("temp.txt");
+            startGame(&g->user, g->mat, g->size, ranking);
+
             freeMatrix(g->mat, g->size);
             freeMatrix(g->previousState, g->size);
             free(&g->user);
             free(g);
+
             break;
          case 'C':
-            g = readData();
-            startGame(&g->user, g->mat, g->size);
+            clearTerminal();
+            char arquivo[MAX];
+            printf("Insira o nome do arquivo para carregar o jogo: ");
+            scanf("%s", arquivo);
+
+            g = readData(arquivo);
+            startGame(&g->user, g->mat, g->size, ranking);
             freeMatrix(g->mat, g->size);
             freeMatrix(g->previousState, g->size);
             free(&g->user);
             free(g);
+
             break;
          case 'S':
             clearTerminal();
-            printf("Função 'Salvar jogo' ainda não implementada.\n");
+            char arquivo2[MAX];
+            printf("Insira o nome do arquivo para salvar o jogo: ");
+            scanf("%s", arquivo2);
+
+            g = readData("temp.txt");
+            saveData(g->mat, g->previousState, g->size, &g->user, arquivo2);
+            free(g);
+
             break;
          case 'M':
             clearTerminal();
-            printf("Função 'Mostrar Ranking' ainda não implementada.\n");
+            // printRanking(ranking);
             break;
          case 'A':
             clearTerminal();
