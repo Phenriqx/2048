@@ -8,7 +8,9 @@
 #include "mechanics.h"
 #include "utils.h"
 
-void initGame(int n, Ranking *ranking) {
+// Faz o check do tamanho do tabuleiro e inicializa a matriz inicial.
+void initGame(int n, Ranking *ranking)
+{
    if (n < 4 || n > 6) {
       printf("Tamanho do tabuleiro não pode ser menor que 4 nem maior que 6.\n");
       return;
@@ -83,7 +85,7 @@ User *initUser() {
    printf("Digite o seu nome: ");
    fgets(str, MAX, stdin);
 
-   str[strcspn(str, "\n")] = '\0';
+   str[strcspn(str, "\n")] = '\0'; // Encontra a primeira instância de '\n' e substitui por um '\0' 
    strcpy(u->nome, str);
 
    u->score = 0;
@@ -93,6 +95,7 @@ User *initUser() {
    return u;
 }
 
+// pega o input do movimento do usuário e chama a função correta correspondente ao input
 void startGame(User *u, int **mat, int size, Ranking *ranking) {
    char move[MAX];
    bool moveOccurred;
@@ -118,6 +121,9 @@ void startGame(User *u, int **mat, int size, Ranking *ranking) {
             if (previousState != NULL)
                freeMatrix(previousState, size);
             previousState = undoMovement(mat, size);
+            /*
+            A variável previousState salva a matriz exata do último movimento do usuário. É usada na função undoMovement()
+            */
             previousScore = u->score;
 
             moveOccurred = moveUp(mat, size, u);
@@ -217,7 +223,7 @@ void startGame(User *u, int **mat, int size, Ranking *ranking) {
       if (isGameWon(u, mat, size) || noMovesLeft(u, mat, size))
          if (isGameWon(u, mat, size) && counter < 1) {
             gameContinues = askUser();
-            counter++;
+            counter++; // Garante que este input não aparece ao usuário mais de uma vez caso ele vença e opte por continuar jogando;
          }
    }
    
@@ -404,6 +410,16 @@ bool checkEmptySpaces(int **mat, int size) {
    return false; // Retorna falso se nenhum espaço no tabuleiro for 0;
 }
 
+/*
+As funções compactUp e compactDown são essenciais no movimento das peças.
+Elas são responsáveis por compactar as colunas do tabuleiro, movendo todos os valores não-nulos para o topo ou para baixo, a depender da função.
+Exemplos: {
+Coluna: [0, 2, 0, 2]
+   compactUp(): [0, 2, 0, 2] -> [2, 2, 0, 0]
+   compactDown(): [0, 2, 0, 2] -> [0, 0, 2, 2]
+}
+
+*/
 void compactUp(int **mat, int columnIdx, int size) {
    int k = 0;
    for (int i = 0; i < size; i++)
@@ -453,6 +469,7 @@ int** undoMovement(int **mat, int size) {
    return copy;
 }
 
+// Lê as informações do arquivo
 GameInfo* readData(const char* filename) {
    GameInfo *g;
    g = malloc(sizeof(GameInfo));
@@ -486,7 +503,7 @@ GameInfo* readData(const char* filename) {
    return g;
 }
 
-
+// Salva as informações dentro do arquivo especificado pelo usuário
 void saveData(int **mat, int **previousState, int size, User *u, const char* filename) {
    FILE *file = fopen(filename, "w");
    if (file == NULL) {
