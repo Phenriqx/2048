@@ -15,23 +15,23 @@ void clearTerminal() {
 // Imprime o menu inicial com as opções de escolha para o usuário
 void printMainMenu(RankingData*ranking) {
    clearTerminal();
-   char move[MAX], sure;
+   char move[MAX], sure, extraChar;
    char boardSize[MAX];
 
    int size;
    GameInfo *g;
 
-   printf(RED(BOLD("\n----- BEM-VINDO AO JOGO 2048 -----\n")));
-   printf("(R) Sair\n");
-   printf("(N) Novo jogo\n");
+   printf(BLACK(BOLD("\n----- BEM-VINDO AO JOGO 2048 -----\n")));
+   printf(RED(BOLD("(R) Sair\n")));
+   printf(GREEN("(N) Novo jogo\n"));
    printf("\t(4) Jogo padrão 4x4\n");
    printf("\t(5) Jogo 5x5\n");
    printf("\t(6) Jogo 6x6\n");
-   printf("(J) Continuar jogo atual\n");
-   printf("(C) Carregar um jogo salvo\n");
-   printf("(S) Salvar o jogo atual\n");
-   printf("(M) Mostrar Ranking\n");
-   printf("(A) Ajuda com as instruções de como jogar\n");
+   printf(YELLOW(BOLD("(J) Continuar jogo atual\n")));
+   printf(BLUE(BOLD("(C) Carregar um jogo salvo\n")));
+   printf(CYAN(BOLD("(S) Salvar o jogo atual\n")));
+   printf(MAGENTA(BOLD("(M) Mostrar Ranking\n")));
+   printf(YELLOW("(A) Ajuda com as instruções de como jogar\n"));
 
    while (1) {
       printf("Digite uma opção: ");
@@ -53,38 +53,58 @@ void printMainMenu(RankingData*ranking) {
       }
       else if (!strcmp(move, "n")) {
          printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6): ");
-         if (fgets(boardSize, MAX, stdin) != NULL) {
-            if (sscanf(boardSize, "%d", &size) == 1) {
-               if (size < 4 || size > 6 )
-                  printf("Tamanho do tabuleiro não pode ser menor que 4 nem maior que 6.\n");
-               else 
-                  initGame(size, ranking);
+         printf("Selecione o tamamho do tabuleiro (4-6): ");
+         while (1) { // Loop infinito que só é quebrado com um input válido
+            
+            if (fgets(boardSize, MAX, stdin) == NULL) 
+               continue; 
+
+            /* 
+            A função sscanf() tenta extrair um determinado tipo, expressado pelo "%d" de uma string. Retorna a quantidade de itens lidos com sucesso.
+            logo no caso abaixo se espera que seja 1, pois a variável size é somente 1 integer. Caso o usuário digite uma
+            */
+            if (sscanf(boardSize, "%d %c", &size, &extraChar) != 1) {
+               printf("Input inválido, por favor digite um número!\n");
+               printf("Número: ");
             }
             else {
-               clearTerminal();
-               printf("Input inválido, por favor digite um número!\n");
+               if (size >= 4 && size <= 6) {
+                  initGame(size, ranking);
+                  break;
+               }
+               else {
+                  printf("Tamanho do tabuleiro deve ser entre 4 e 6.\n");
+                  printf("Número: ");
+               }
             }
          }
       }
       else if (!strcmp(move, "j")) {
-         printf("Voltando ao jogo anterior!\n");
-         g = readData("temp.txt");
-         startGame(&g->user, g->mat, g->size, ranking);
+         if((g = readData("temp.txt"))) {
+            startGame(&g->user, g->mat, g->size, ranking);
 
-         freeMatrix(g->mat, g->size);
-         if (g->previousState != NULL)
-            freeMatrix(g->previousState, g->size);
-         free(g);
-
+            freeMatrix(g->mat, g->size);
+            if (g->previousState != NULL)
+               freeMatrix(g->previousState, g->size);
+            free(g);
+         }
+         else {
+            clearTerminal();
+            printf(RED(BOLD("Você não possui nenhum jogo atual.\n")));
+         }
       }
       else if (!strcmp(move, "c")) {
          clearTerminal();
          char arquivo[MAX];
-         printf("Insira o nome do arquivo para carregar o jogo: ");
-         scanf("%s", arquivo);
-         cleanBuffer();
+         do { 
+            printf("Insira o nome do arquivo para carregar o jogo: ");
+            scanf("%s", arquivo);
+            cleanBuffer();
+            g = readData(arquivo);
 
-         g = readData(arquivo);
+            if (g == NULL)
+               printf(BLUE(BOLD("Este arquivo não existe. Tente novamente!\n")));
+         } while (g == NULL);
          startGame(&g->user, g->mat, g->size, ranking);
          freeMatrix(g->mat, g->size);
          freeMatrix(g->previousState, g->size);
@@ -112,20 +132,20 @@ void printMainMenu(RankingData*ranking) {
       }
       else {
          clearTerminal();
-         printf("Código inválido. Tente novamente\n");
+         printf(RED("Código inválido. Tente novamente\n"));
        }
 
-       printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
-       printf("(R) Sair\n");
-       printf("(N) Novo jogo\n");
-       printf("\t(4) Jogo padrão 4x4\n");
-       printf("\t(5) Jogo 5x5\n");
-       printf("\t(6) Jogo 6x6\n");
-       printf("(J) Continuar jogo atual\n");
-       printf("(C) Carregar um jogo salvo\n");
-       printf("(S) Salvar o jogo atual\n");
-       printf("(M) Mostrar Ranking\n");
-       printf("(A) Ajuda com as instruções de como jogar\n");
+      printf(BLACK(BOLD("\n----- BEM-VINDO AO JOGO 2048 -----\n")));
+      printf(RED(BOLD("(R) Sair\n")));
+      printf(GREEN("(N) Novo jogo\n"));
+      printf("\t(4) Jogo padrão 4x4\n");
+      printf("\t(5) Jogo 5x5\n");
+      printf("\t(6) Jogo 6x6\n");
+      printf(YELLOW(BOLD("(J) Continuar jogo atual\n")));
+      printf(BLUE(BOLD("(C) Carregar um jogo salvo\n")));
+      printf(CYAN(BOLD("(S) Salvar o jogo atual\n")));
+      printf(MAGENTA(BOLD("(M) Mostrar Ranking\n")));
+      printf(YELLOW("(A) Ajuda com as instruções de como jogar\n"));
    }
 }
 

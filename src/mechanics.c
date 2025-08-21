@@ -486,17 +486,18 @@ GameInfo* readData(const char* filename) {
    GameInfo *g;
    g = malloc(sizeof(GameInfo));
    if (g == NULL)
-      exit(EXIT_FAILURE);
+      exit(EXIT_FAILURE); // Caso ocorra erro na alocação de memória
 
    FILE *file = fopen(filename, "r");
    if (file == NULL) {
-      perror("Erro ao abrir o arquivo.\n");
-      exit(EXIT_FAILURE);
+      return NULL;
    }
 
+   // Lê os dados iniciais do arquivo.
    fscanf(file, "%d %d %d", &g->size, &g->user.undoMoves, &g->user.trades);
    fscanf(file, "%d %s", &g->user.score, g->user.nome);
 
+   // Lê a matriz principal do arquivo.
    g->mat = createMatrix(g->size);
    for (int i = 0; i < g->size; i++) {
       for (int j = 0; j < g->size; j++) {
@@ -504,6 +505,7 @@ GameInfo* readData(const char* filename) {
       }
    }
 
+   // Lê a matriz que contém a última jogada.
    g->previousState = createMatrix(g->size);
    for (int i = 0; i < g->size; i++) {
       for (int j = 0; j < g->size; j++) {
@@ -562,7 +564,7 @@ void loadRanking(RankingData *ranking) {
       return;
    }
 
-   // Lê o número de entradas por ranking.
+   // Lê o número de entradas por ranking e salva na struct.
    fread(&ranking->num4, sizeof(int), 1, file);
    fread(&ranking->num5, sizeof(int), 1, file);
    fread(&ranking->num6, sizeof(int), 1, file);
@@ -579,6 +581,8 @@ void saveRanking(RankingData *ranking) {
    if (file == NULL)
       exit(EXIT_FAILURE);
 
+   // Percorre os arrays de ranking para cada tamanho de joogo e conta o número de entradas válidas para cada um. 
+   // O total de jogadores por tamanho de tabuleiro são armazenados nas variáveis abaixo.
    int num4 = 0, num5 = 0, num6 = 0;
    for (int i = 0; i < 10; i++) {
       if (ranking->ranking4x4[i].score > 0)
@@ -589,14 +593,17 @@ void saveRanking(RankingData *ranking) {
          num6++;
    }
 
+   // Atualiza o número de partidas jogadas para cada tabuleiro na struct.
    ranking->num4 = num4;
    ranking->num5 = num5;
    ranking->num6 = num6;
 
+   // Passa os dados da struct para o arquivo binário.
    fwrite(&ranking->num4, sizeof(int), 1, file);
    fwrite(&ranking->num5, sizeof(int), 1, file);
    fwrite(&ranking->num6, sizeof(int), 1, file);
 
+   // Estes dados são atualizados na função updateRanking(), mas são transferidos para o arquivo nesta função.
    fwrite(&ranking->ranking4x4, sizeof(RankingEntry), ranking->num4, file);
    fwrite(&ranking->ranking5x5, sizeof(RankingEntry), ranking->num5, file);
    fwrite(&ranking->ranking6x6, sizeof(RankingEntry), ranking->num6, file);
@@ -616,16 +623,17 @@ void updateRanking(RankingData *ranking, User *u, int size) {
 
    // Começa do maior (posição 0) e vai até o menor (posição 9)
    int i;
-   if (u->score > currentRank[9].score) {
+   if (u->score > currentRank[9].score) { // Avalia primeiro se o jogador tem pontuação suficiente para entrar no top 10.
       for (i = 0; i < 10; i++) {
          if (u->score > currentRank[i].score)
-            break;
+            break; // Acha a colocação correta no ranking dado a sua pontuação.
       }
 
       for (int k = 9; k > i; k--) {
-         currentRank[k] = currentRank[k - 1];
+         currentRank[k] = currentRank[k - 1]; // Move os demais participantes para baixo.
       }
 
+      // Copia o nome e pontuação do usuário atual para a struct na sua devida colocação.
       strcpy(currentRank[i].name, u->nome);
       currentRank[i].score = u->score;
    }
