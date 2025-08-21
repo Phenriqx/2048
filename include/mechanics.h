@@ -29,13 +29,14 @@ typedef struct {
 } RankingEntry;
 
 typedef struct {
+    int num4, num5, num6;
     RankingEntry ranking4x4[10];
     RankingEntry ranking5x5[10];
     RankingEntry ranking6x6[10];
-} Ranking;
+} RankingData;
 
-void initGame(int n, Ranking *ranking);
-void startGame(User *u, int **mat, int size, Ranking *ranking);
+void initGame(int n, RankingData *ranking);
+void startGame(User *u, int **mat, int size, RankingData *ranking);
 int generateRandomPosition(int size);
 int generateRandomNumber(int size);
 void insertNumber(int **mat, int size);
@@ -53,5 +54,9 @@ int **undoMovement(int **mat, int size);
 void saveData(int **mat, int **previousState, int size, User *u, const char* filename);
 GameInfo* readData(const char *filename);
 User *initUser();
+void loadRanking(RankingData *ranking);
+void saveRanking(RankingData *ranking);
+void updateRanking(RankingData *ranking, User *u, int size);
+void printRanking(RankingData *ranking);
 
 #endif

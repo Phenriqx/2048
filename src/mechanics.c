@@ -7,15 +7,10 @@
 
 #include "mechanics.h"
 #include "utils.h"
+#include "colors.h"
 
 // Faz o check do tamanho do tabuleiro e inicializa a matriz inicial.
-void initGame(int n, Ranking *ranking)
-{
-   if (n < 4 || n > 6) {
-      printf("Tamanho do tabuleiro não pode ser menor que 4 nem maior que 6.\n");
-      return;
-   }
-
+void initGame(int n, RankingData *ranking) {
    User *u = initUser();
    int **mat;
    mat = calloc(n, sizeof(int *)); // calloc inicializa a matriz com valores nulos.
@@ -96,13 +91,15 @@ User *initUser() {
 }
 
 // pega o input do movimento do usuário e chama a função correta correspondente ao input
-void startGame(User *u, int **mat, int size, Ranking *ranking) {
+void startGame(User *u, int **mat, int size, RankingData *ranking) {
    char move[MAX];
    bool moveOccurred;
    bool gameContinues = true;
    int **previousState = NULL;
    int previousScore = u->score;
    int counter = 0;
+
+   RankingEntry entry;
 
    while (gameContinues) {
       clearTerminal();
@@ -200,18 +197,17 @@ void startGame(User *u, int **mat, int size, Ranking *ranking) {
          else if (!strcmp(move, "voltar")) {
             printf("Voltando ao menu principal e salvando jogo.\n");
             saveData(mat, previousState, size, u, "temp.txt");
-            if (previousState != NULL)
-               freeMatrix(previousState, size);
-            printMainMenu(ranking);
+
+            return;
          }
          else 
             printf("Erro! Comando inválido. Tente novamente.\n");
          
          if (!moveOccurred && strcmp(move, "voltar") != 0) {
             printf("Movimento inválido ou não possível. Tente novamente.\n");
-            printf("Pressione Enter para continuar...");
+            printf("Pressione Enter para continuar...\n");
             getchar();
-            // Reprint the board after invalid move
+
             clearTerminal();
             printBoard(mat, size);
             printf("Placar: %d\n", u->score);
@@ -220,11 +216,27 @@ void startGame(User *u, int **mat, int size, Ranking *ranking) {
       }
       while (!moveOccurred);
 
-      if (isGameWon(u, mat, size) || noMovesLeft(u, mat, size))
-         if (isGameWon(u, mat, size) && counter < 1) {
-            gameContinues = askUser();
-            counter++; // Garante que este input não aparece ao usuário mais de uma vez caso ele vença e opte por continuar jogando;
+      if (isGameWon(u, mat, size) && counter < 1) {
+         gameContinues = askUser();
+         counter++; // Garante que este input não aparece ao usuário mais de uma vez caso ele vença e opte por continuar jogando;
+         if ((gameContinues == false)) {
+            printf(GREEN(BOLD("Parabéns! Você ganhou.\n")));
+            entry.score = u->score;
+            strcpy(entry.name, u->nome);
+            updateRanking(ranking, u, size);
+
+            exit(EXIT_SUCCESS);
          }
+      }
+      if (noMovesLeft(u, mat, size)) {
+         printBoard(mat, size);
+         printf(RED(BOLD("O jogo acabou. Você não tem mais movimentos válidos!\n")));
+
+         printf("Pressione Enter para continuar...\n");
+         getchar();
+
+         gameContinues = false;
+      }
    }
    
    if (previousState != NULL)
@@ -235,8 +247,8 @@ bool askUser() {
    char opt;
    printf("Você deseja continuar o jogo? (S/N) ");
    scanf("%c", &opt);
-   cleanBuffer();
 
+   cleanBuffer();
    if (tolower(opt) == 's') 
       return true;
    else
@@ -515,10 +527,7 @@ void saveData(int **mat, int **previousState, int size, User *u, const char* fil
 
    for (int i = 0; i < size; i++) {
       for (int j = 0; j < size; j++)
-         if (mat[i][j] != 0)
-            fprintf(file, "%d ", mat[i][j]);
-         else
-            fprintf(file, "0 ");
+         fprintf(file, "%d ", mat[i][j]);
       fprintf(file, "\n");
    }
 
@@ -546,6 +555,78 @@ void saveData(int **mat, int **previousState, int size, User *u, const char* fil
    fclose(file);
 }
 
-void loadRanking(Ranking *ranking);
-void saveRanking(Ranking *ranking);
-void printRanking(Ranking *ranking);
+void loadRanking(RankingData *ranking) {
+   FILE *file = fopen("ranking.dat", "rb");
+   if (file == NULL) {
+      memset(ranking, 0, sizeof(RankingData));
+      return;
+   }
+
+   // Lê o número de entradas por ranking.
+   fread(&ranking->num4, sizeof(int), 1, file);
+   fread(&ranking->num5, sizeof(int), 1, file);
+   fread(&ranking->num6, sizeof(int), 1, file);
+
+   fread(&ranking->ranking4x4, sizeof(RankingEntry), ranking->num4, file);
+   fread(&ranking->ranking5x5, sizeof(RankingEntry), ranking->num5, file);
+   fread(&ranking->ranking6x6, sizeof(RankingEntry), ranking->num6, file);
+
+   fclose(file);
+}
+
+void saveRanking(RankingData *ranking) {
+   FILE *file = fopen("ranking.dat", "wb");
+   if (file == NULL)
+      exit(EXIT_FAILURE);
+
+   int num4 = 0, num5 = 0, num6 = 0;
+   for (int i = 0; i < 10; i++) {
+      if (ranking->ranking4x4[i].score > 0)
+         num4++;
+      if (ranking->ranking5x5[i].score > 0)
+         num5++;
+      if (ranking->ranking6x6[i].score > 0)
+         num6++;
+   }
+
+   ranking->num4 = num4;
+   ranking->num5 = num5;
+   ranking->num6 = num6;
+
+   fwrite(&ranking->num4, sizeof(int), 1, file);
+   fwrite(&ranking->num5, sizeof(int), 1, file);
+   fwrite(&ranking->num6, sizeof(int), 1, file);
+
+   fwrite(&ranking->ranking4x4, sizeof(RankingEntry), ranking->num4, file);
+   fwrite(&ranking->ranking5x5, sizeof(RankingEntry), ranking->num5, file);
+   fwrite(&ranking->ranking6x6, sizeof(RankingEntry), ranking->num6, file);
+
+   fclose(file);
+}
+
+void updateRanking(RankingData *ranking, User *u, int size) {
+   RankingEntry *currentRank;
+
+   if (size == 4)
+      currentRank = ranking->ranking4x4;
+   else if (size == 5)
+      currentRank = ranking->ranking5x5;
+   else
+      currentRank = ranking->ranking6x6;
+
+   // Começa do maior (posição 0) e vai até o menor (posição 9)
+   int i;
+   if (u->score > currentRank[9].score) {
+      for (i = 0; i < 10; i++) {
+         if (u->score > currentRank[i].score)
+            break;
+      }
+
+      for (int k = 9; k > i; k--) {
+         currentRank[k] = currentRank[k - 1];
+      }
+
+      strcpy(currentRank[i].name, u->nome);
+      currentRank[i].score = u->score;
+   }
+}

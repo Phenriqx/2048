@@ -13,13 +13,15 @@ void clearTerminal() {
 }
 
 // Imprime o menu inicial com as opções de escolha para o usuário
-void printMainMenu(Ranking *ranking) {
+void printMainMenu(RankingData*ranking) {
    clearTerminal();
-   char opt, sure;
+   char move[MAX], sure;
+   char boardSize[MAX];
 
    int size;
+   GameInfo *g;
 
-   printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
+   printf(RED(BOLD("\n----- BEM-VINDO AO JOGO 2048 -----\n")));
    printf("(R) Sair\n");
    printf("(N) Novo jogo\n");
    printf("\t(4) Jogo padrão 4x4\n");
@@ -33,87 +35,97 @@ void printMainMenu(Ranking *ranking) {
 
    while (1) {
       printf("Digite uma opção: ");
-      scanf(" %c", &opt); 
-      cleanBuffer(); 
+      fgets(move, MAX, stdin);
+      toLowerString(move);
+      move[strcspn(move, "\n")] = '\0'; 
 
-      switch (toupper(opt)) {
-         case 'R':
-            printf("Você deseja realmente sair? (S/N) ");
-            scanf(" %c", &sure);
-            cleanBuffer();
-            if (tolower(sure) == 's') {
-               printf("Saindo do jogo!\n");
-               exit(EXIT_SUCCESS);
-            }
 
-            clearTerminal();
-            break;
-         case 'N':
-            printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6): ");
-            scanf("%d", &size);
-            cleanBuffer();
-            initGame(size, ranking);
-            break;
-         case 'J':
-            printf("Voltando ao jogo anterior!\n");
-            GameInfo *g = readData("temp.txt");
-            startGame(&g->user, g->mat, g->size, ranking);
+      if (!strcmp(move, "r")) {
+         printf("Você deseja realmente sair? (S/N) ");
+         scanf("%c", &sure);
+         cleanBuffer();
+         if (tolower(sure) == 's') {
+            printf("Saindo do jogo!\n");
+            return;
+         }
 
-            freeMatrix(g->mat, g->size);
-            freeMatrix(g->previousState, g->size);
-            free(&g->user);
-            free(g);
-
-            break;
-         case 'C':
-            clearTerminal();
-            char arquivo[MAX];
-            printf("Insira o nome do arquivo para carregar o jogo: ");
-            scanf("%s", arquivo);
-
-            g = readData(arquivo);
-            startGame(&g->user, g->mat, g->size, ranking);
-            freeMatrix(g->mat, g->size);
-            freeMatrix(g->previousState, g->size);
-            free(&g->user);
-            free(g);
-
-            break;
-         case 'S':
-            clearTerminal();
-            char arquivo2[MAX];
-            printf("Insira o nome do arquivo para salvar o jogo: ");
-            scanf("%s", arquivo2);
-
-            g = readData("temp.txt");
-            saveData(g->mat, g->previousState, g->size, &g->user, arquivo2);
-            free(g);
-
-            break;
-         case 'M':
-            clearTerminal();
-            // printRanking(ranking);
-            break;
-         case 'A':
-            clearTerminal();
-            gameInstructions();
-            break;
-         default:
-            clearTerminal();
-            printf("Código inválido. Tente novamente\n");
-            break;
+         clearTerminal();
       }
-      printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
-      printf("(R) Sair\n");
-      printf("(N) Novo jogo\n");
-      printf("\t(4) Jogo padrão 4x4\n");
-      printf("\t(5) Jogo 5x5\n");
-      printf("\t(6) Jogo 6x6\n");
-      printf("(J) Continuar jogo atual\n");
-      printf("(C) Carregar um jogo salvo\n");
-      printf("(S) Salvar o jogo atual\n");
-      printf("(M) Mostrar Ranking\n");
-      printf("(A) Ajuda com as instruções de como jogar\n");
+      else if (!strcmp(move, "n")) {
+         printf("Vamos começar um novo jogo! Selecione o tamamho do tabuleiro (4-6): ");
+         if (fgets(boardSize, MAX, stdin) != NULL) {
+            if (sscanf(boardSize, "%d", &size) == 1) {
+               if (size < 4 || size > 6 )
+                  printf("Tamanho do tabuleiro não pode ser menor que 4 nem maior que 6.\n");
+               else 
+                  initGame(size, ranking);
+            }
+            else {
+               clearTerminal();
+               printf("Input inválido, por favor digite um número!\n");
+            }
+         }
+      }
+      else if (!strcmp(move, "j")) {
+         printf("Voltando ao jogo anterior!\n");
+         g = readData("temp.txt");
+         startGame(&g->user, g->mat, g->size, ranking);
+
+         freeMatrix(g->mat, g->size);
+         if (g->previousState != NULL)
+            freeMatrix(g->previousState, g->size);
+         free(g);
+
+      }
+      else if (!strcmp(move, "c")) {
+         clearTerminal();
+         char arquivo[MAX];
+         printf("Insira o nome do arquivo para carregar o jogo: ");
+         scanf("%s", arquivo);
+         cleanBuffer();
+
+         g = readData(arquivo);
+         startGame(&g->user, g->mat, g->size, ranking);
+         freeMatrix(g->mat, g->size);
+         freeMatrix(g->previousState, g->size);
+         free(g);
+
+      }
+      else if (!strcmp(move, "s")) {
+         clearTerminal();
+         char arquivo2[MAX];
+         printf("Insira o nome do arquivo para salvar o jogo: ");
+         scanf("%s", arquivo2);
+         cleanBuffer();
+
+         g = readData("temp.txt");
+         saveData(g->mat, g->previousState, g->size, &g->user, arquivo2);
+         free(g);
+
+      }
+      else if (!strcmp(move, "m")) {
+         //printRanking(ranking);
+      }
+      else if (!strcmp(move, "a")) {
+         clearTerminal();
+         gameInstructions();
+      }
+      else {
+         clearTerminal();
+         printf("Código inválido. Tente novamente\n");
+       }
+
+       printf("\n----- BEM-VINDO AO JOGO 2048 -----\n");
+       printf("(R) Sair\n");
+       printf("(N) Novo jogo\n");
+       printf("\t(4) Jogo padrão 4x4\n");
+       printf("\t(5) Jogo 5x5\n");
+       printf("\t(6) Jogo 6x6\n");
+       printf("(J) Continuar jogo atual\n");
+       printf("(C) Carregar um jogo salvo\n");
+       printf("(S) Salvar o jogo atual\n");
+       printf("(M) Mostrar Ranking\n");
+       printf("(A) Ajuda com as instruções de como jogar\n");
    }
 }
 

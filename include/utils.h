@@ -4,7 +4,7 @@
 
 #include "mechanics.h"
 
-void printMainMenu(Ranking *ranking);
+void printMainMenu(RankingData *ranking);
 void printBoard(int **mat, int size);
 void freeMatrix(int **mat, int n);
 void clearTerminal();
@@ -15,9 +15,6 @@ char* getPieceColor(int value);
 void toLowerString(char *str);
 int** createMatrix(int size);
 void deleteFileIfExists(const char* filename);
-void loadRanking(Ranking *ranking);
-void saveRanking(Ranking *ranking);
-void printRanking(Ranking *ranking);
 bool askUser();
 
 #endif
