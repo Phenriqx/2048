@@ -15,6 +15,6 @@ char* getPieceColor(int value);
 void toLowerString(char *str);
 int** createMatrix(int size);
 void deleteFileIfExists(const char* filename);
-bool askUser();
+bool askUser(User *u);
 
 #endif

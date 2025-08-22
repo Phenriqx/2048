@@ -49,7 +49,7 @@ void compactDown(int **mat, int columnIdx, int size);
 int isGameWon(User *u, int **mat, int size);
 bool noMovesLeft(User *u, int **mat, int size);
 bool checkEmptySpaces(int **mat, int size);
-void tradePieces(int **mat, User *u);
+bool tradePieces(int **mat, User *u, int size, Position p1, Position p2);
 int **undoMovement(int **mat, int size);
 void saveData(int **mat, int **previousState, int size, User *u, const char* filename);
 GameInfo* readData(const char *filename);

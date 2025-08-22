@@ -12,8 +12,6 @@ void clearTerminal() {
    system("clear");
 }
 
-// CORRIGIR BUG MOVIMENTO DE DESFAZER APOS CARREGAR JOGO.
-
 // Imprime o menu inicial com as opções de escolha para o usuário
 void printMainMenu(RankingData*ranking) {
    clearTerminal();
@@ -41,7 +39,7 @@ void printMainMenu(RankingData*ranking) {
       toLowerString(move);
       move[strcspn(move, "\n")] = '\0'; 
 
-
+// CORRIGIR BUG MOVIMENTO DE DESFAZER APOS CARREGAR JOGO.
       if (!strcmp(move, "r")) {
          printf("Você deseja realmente sair? (S/N) ");
          scanf("%c", &sure);
@@ -127,7 +125,8 @@ void printMainMenu(RankingData*ranking) {
 
       }
       else if (!strcmp(move, "m")) {
-         //printRanking(ranking);
+         clearTerminal();
+         printRanking(ranking);
       }
       else if (!strcmp(move, "a")) {
          clearTerminal();
