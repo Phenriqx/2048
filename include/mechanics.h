@@ -36,7 +36,7 @@ typedef struct {
 } RankingData;
 
 void initGame(int n, RankingData *ranking);
-void startGame(User *u, int **mat, int size, RankingData *ranking);
+void startGame(User *u, int **mat, int **previousState, int size, RankingData *ranking);
 int generateRandomPosition(int size);
 int generateRandomNumber(int size);
 void insertNumber(int **mat, int size);

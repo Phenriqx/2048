@@ -12,6 +12,8 @@ void clearTerminal() {
    system("clear");
 }
 
+// CORRIGIR BUG MOVIMENTO DE DESFAZER APOS CARREGAR JOGO.
+
 // Imprime o menu inicial com as opções de escolha para o usuário
 void printMainMenu(RankingData*ranking) {
    clearTerminal();
@@ -81,7 +83,7 @@ void printMainMenu(RankingData*ranking) {
       }
       else if (!strcmp(move, "j")) {
          if((g = readData("temp.txt"))) {
-            startGame(&g->user, g->mat, g->size, ranking);
+            startGame(&g->user, g->mat, g->previousState, g->size, ranking);
 
             freeMatrix(g->mat, g->size);
             if (g->previousState != NULL)
@@ -105,7 +107,8 @@ void printMainMenu(RankingData*ranking) {
             if (g == NULL)
                printf(BLUE(BOLD("Este arquivo não existe. Tente novamente!\n")));
          } while (g == NULL);
-         startGame(&g->user, g->mat, g->size, ranking);
+
+         startGame(&g->user, g->mat, g->previousState, g->size, ranking);
          freeMatrix(g->mat, g->size);
          freeMatrix(g->previousState, g->size);
          free(g);
@@ -165,7 +168,7 @@ int getMaxDigits(int **mat, int size) {
 
 // Com o valor da função getMaxDigits(), calcula o tamanho necessário para printar a formatação certa da tabela.
 void printBoard(int **mat, int size) {
-   clearTerminal();
+   // clearTerminal();
    int maxDigits = getMaxDigits(mat, size);
    int cellWidth = maxDigits + 2;
 
