@@ -39,7 +39,6 @@ void printMainMenu(RankingData*ranking) {
       toLowerString(move);
       move[strcspn(move, "\n")] = '\0'; 
 
-// CORRIGIR BUG MOVIMENTO DE DESFAZER APOS CARREGAR JOGO.
       if (!strcmp(move, "r")) {
          printf("Você deseja realmente sair? (S/N) ");
          scanf("%c", &sure);
@@ -106,9 +105,11 @@ void printMainMenu(RankingData*ranking) {
                printf(BLUE(BOLD("Este arquivo não existe. Tente novamente!\n")));
          } while (g == NULL);
 
+         printf("Bom jogo %s!\n", g->user.nome);
          startGame(&g->user, g->mat, g->previousState, g->size, ranking);
          freeMatrix(g->mat, g->size);
-         freeMatrix(g->previousState, g->size);
+         if (g->previousState != NULL)
+            freeMatrix(g->previousState, g->size);
          free(g);
 
       }
