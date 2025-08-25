@@ -5,7 +5,7 @@
 #define MAX 64
 #endif
 
-#include <stdbool.h>
+#include <stdbool.h> // usada para os tipos booleanos
 
 typedef struct {
     char nome[MAX];
@@ -35,25 +35,33 @@ typedef struct {
     RankingEntry ranking6x6[10];
 } RankingData;
 
+// funções de jogo
 void initGame(int n, RankingData *ranking);
 void startGame(User *u, int **mat, int **previousState, int size, RankingData *ranking);
 int generateRandomPosition(int size);
 int generateRandomNumber(int size);
 void insertNumber(int **mat, int size);
+int isGameWon(User *u, int **mat, int size);
+bool noMovesLeft(User *u, int **mat, int size);
+bool checkEmptySpaces(int **mat, int size);
+bool tradePieces(int **mat, User *u, int size, Position p1, Position p2);
+int **undoMovement(int **mat, int size);
+User *initUser();
+
+// funções de movimento e auxiliares
 bool moveUp(int **mat, int size, User *u);
 bool moveDown(int **mat, int size, User *u);
 bool moveLeft(int **mat, int size, User *u);
 bool moveRight(int **mat, int size, User *u);
 void compactUp(int **mat, int columnIdx, int size);
 void compactDown(int **mat, int columnIdx, int size);
-int isGameWon(User *u, int **mat, int size);
-bool noMovesLeft(User *u, int **mat, int size);
-bool checkEmptySpaces(int **mat, int size);
-bool tradePieces(int **mat, User *u, int size, Position p1, Position p2);
-int **undoMovement(int **mat, int size);
+
+
+// funções de arquivos texto
 void saveData(int **mat, int **previousState, int size, User *u, const char* filename);
 GameInfo* readData(const char *filename);
-User *initUser();
+
+// funções de ranking
 void loadRanking(RankingData *ranking);
 void saveRanking(RankingData *ranking);
 void updateRanking(RankingData *ranking, User *u, int size);

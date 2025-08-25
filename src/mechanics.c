@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <time.h>
-#include <string.h>
-#include <stdbool.h>
+#include <ctype.h> // usada para as funções tolower e toupper.
+#include <string.h> // usada para as funções relacionadas a string, como strcmp() e strcspn().
+#include <stdbool.h> // usada para os tipos booleanos: true e false.
 
 #include "mechanics.h"
 #include "utils.h"
@@ -13,7 +12,9 @@
 void initGame(int n, RankingData *ranking) {
    User *u = initUser();
    int **mat;
-   mat = calloc(n, sizeof(int *)); // calloc inicializa a matriz com valores nulos.
+
+   // calloc inicializa a matriz com valores nulos.
+   mat = calloc(n, sizeof(int *)); 
    if (mat == NULL) {
       free(mat);
       exit(EXIT_FAILURE);
@@ -21,24 +22,26 @@ void initGame(int n, RankingData *ranking) {
 
    for (int i = 0; i < n; i++) {
       mat[i] = calloc(n, sizeof(int));
-      if (mat[i] == NULL) {
+      if (mat[i] == NULL) { // caso ocorra algum erro de alocação, libera a matriz e fecha o programa.
          free(mat[i]);
          exit(EXIT_FAILURE);
       }
    }
 
+   // Insere dois números no tabuleiro e inicia o jogo.
    insertNumber(mat, n);
    insertNumber(mat, n);
    printBoard(mat, n);
 
    startGame(u, mat, NULL, n, ranking);
 
+   // após o fim da startGame, libera a memória da matriz e do usuário
    free(u);
    freeMatrix(mat, n);
 }
 
 int generateRandomPosition(int size) {
-   return (rand() % size);
+   return (rand() % size); // Retorna um númoro aletório entre 0 e size - 1, exemplo if size == 4, então retorna entre 0 e 3.
 }
 
 int generateRandomNumber(int size) {
@@ -83,6 +86,7 @@ User *initUser() {
    str[strcspn(str, "\n")] = '\0'; // Encontra a primeira instância de '\n' e substitui por um '\0' 
    strcpy(u->nome, str);
 
+   // inicia os valores iniciais com 0.
    u->score = 0;
    u->trades = 0;
    u->undoMoves = 0;
@@ -117,9 +121,11 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
       printf(BLUE(BOLD("\n\tPlacar: %d\tTrocas: %d\tDesfazer movimento: %d\n\n")), u->score, u->trades, u->undoMoves);
       printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar>)\n");
 
-      do {
+      // o loop roda enquanto nenhum movimento válido for inserido.
+      do { 
          printf("Movimento: ");
          fgets(move, MAX, stdin);
+
          toLowerString(move); // Transforma toda a string para lowercase.
          move[strcspn(move, "\n")] = '\0'; // Remove o '\n' da string e coloca um \0 no lugar. 
          moveOccurred = false;
@@ -127,16 +133,17 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
          if (!strcmp(move, "w")) {
             if (previousState != NULL)
                freeMatrix(previousState, size);
+            
+            // A variável previousState salva a matriz exata do último movimento do usuário. É retornada pela undoMovement().
+			   // As outras duas variáveis abaixo salvam o último placar e a quantidade de movimentos de troca do usuário.
             previousState = undoMovement(mat, size);
-            /*
-            A variável previousState salva a matriz exata do último movimento do usuário. É usada na função undoMovement()
-            */
             previousScore = u->score;
             previousTradeCount = u->trades;
-            isLastMove = false;
 
             moveOccurred = moveUp(mat, size, u);
+            isLastMove = false;
 
+			   // Se não houve movimento, então libera a matriz alocada pela função undoMovement();
             if (!moveOccurred) {
                freeMatrix(previousState, size);
                previousState = NULL;
@@ -145,6 +152,7 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
          else if (!strcmp(move, "a")) {
             if (previousState != NULL)
                freeMatrix(previousState, size);
+
             previousState = undoMovement(mat, size);
             previousScore = u->score;
             previousTradeCount = u->trades;
@@ -160,6 +168,7 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
          else if (!strcmp(move, "s")) {
             if (previousState != NULL)
                freeMatrix(previousState, size);
+
             previousState = undoMovement(mat, size);
             previousScore = u->score;
             previousTradeCount = u->trades;
@@ -175,6 +184,7 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
          else if (!strcmp(move, "d")) {
             if (previousState != NULL)
                freeMatrix(previousState, size);
+
             previousState = undoMovement(mat, size);
             previousScore = u->score;
             previousTradeCount = u->trades;
@@ -188,14 +198,17 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
             }
          } 
          else if (!strcmp(move, "u")) {
+			   // só é válido se o usuário possui movimentos de desfazer E houver uma última jogada E seu último movimento não foi de desfazer a última jogada.
             if (u->undoMoves > 0 && previousState != NULL && !isLastMove) {
                for (int i = 0; i < size; i++)
                   for (int j = 0; j < size; j++)
                      mat[i][j] = previousState[i][j];
 
+               // Atualiza as variáveis, como placar, número e trocas e o número de movimentos de desfazer jogada.
                u->undoMoves--;
                u->score = previousScore;
                u->trades = previousTradeCount;
+
                freeMatrix(previousState, size);
                previousState = NULL;
 
@@ -208,12 +221,14 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
                printf("\nVocê não pode fazer dois movimentos de desfazer seguidos!\n");
             
          } 
-         else if (sscanf(move, "%s %s %s", command, pos1, pos2) == 3) {
+
+         // Tenta extrair da string move 3 outras strings, que seriam o comando t e as duas posições para troca. Espera-se que a quantidade extraída seja 3 
+         else if (sscanf(move, "%s %s %s", command, pos1, pos2) == 3) { 
             if (!strcmp(command, "t")) {
                Position p1, p2;
 
                // Avalia se não há espaços entre os pontos da coordenada, exemplo: A 1 é inválido, mas A1 é válido.
-               if (sscanf(pos1, "%c%d", &p1.row, &p1.column) != 2)
+               if (sscanf(pos1, "%c%d", &p1.row, &p1.column) != 2) // Tenta extrair um char e um int da string posição
                   printf("A primeira coordenada não está no formato correto!\n");
                else if (sscanf(pos2, "%c%d", &p2.row, &p2.column) != 2)
                   printf("A segunda coordenada não está no formato correto!\n");
@@ -221,6 +236,7 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
                else {
                   if (previousState != NULL)
                      freeMatrix(previousState, size);
+
                   previousState = undoMovement(mat, size);
                   previousScore = u->score;
                   previousTradeCount = u->trades;
@@ -238,7 +254,7 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
                
                }
             }
-         } 
+         }
          else if (!strcmp(move, "voltar")) {
             printf("Voltando ao menu principal e salvando jogo.\n");
             saveData(mat, previousState, size, u, "temp.txt");
@@ -256,18 +272,19 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
             printf(BLUE(BOLD("\n\tPlacar: %d\tTrocas: %d\tDesfazer movimento: %d\n\n")), u->score, u->trades, u->undoMoves);
             printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar>)\n");
          }
-      }
-      while (!moveOccurred);
+      } while (!moveOccurred);
       clearTerminal();
 
       if (isGameWon(u, mat, size) && counter < 1) {
          clearTerminal();
          printBoard(mat, size);
-         gameContinues = askUser(u);
+         gameContinues = askUser(u); // Pergunta ao usuário se ele deseja continuar no jogo.
          counter++; // Garante que este input não aparece ao usuário mais de uma vez caso ele vença e opte por continuar jogando;
          if ((gameContinues == false)) {
             printf(GREEN(BOLD("Parabéns! Você ganhou.\n")));
             saveData(mat, previousState, size, u, "temp.txt");
+
+			// Salva os dados do usuário no ranking.
             entry.score = u->score;
             strcpy(entry.name, u->nome);
             updateRanking(ranking, u, size);
@@ -285,9 +302,6 @@ void startGame(User *u, int **mat, int **previousState, int size, RankingData *r
             cleanBuffer();
             if (tolower(c) == 's') {
                clearTerminal();
-               // printBoard(mat, size);
-               // printf(BLUE(BOLD("\n\tPlacar: %d\tTrocas: %d\tDesfazer movimento: %d\n\n")), u->score, u->trades, u->undoMoves);
-               // printf("Insira seu movimento: (<w>, <a>, <s>, <d>, <u>, <t pos1 pos2>, <voltar>)\n");
             }
             else {
                printf(RED(BOLD("O jogo acabou! O jodador optou por não continuar o jogo.\n")));
@@ -414,7 +428,7 @@ bool moveLeft(int **mat, int size, User *u) {
    clearTerminal();
    bool merged = false;
 
-   int **aux = createMatrix(size);
+   int **aux = createMatrix(size); // aloca uma matriz auxiliar para a rotação da matriz 
 
    // Rotaciona a matriz para a esquerda para poder reutilizar a função moveDown();
    for (int i = 0; i < size; i++)
@@ -555,7 +569,7 @@ int** undoMovement(int **mat, int size) {
       for (int j = 0; j < size; j++)
          copy[i][j] = mat[i][j];
 
-   return copy;
+   return copy; // retorna uma cópia da matriz passada como referência.
 }
 
 // Lê as informações do arquivo informado pelo usuário

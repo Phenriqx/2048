@@ -6,9 +6,11 @@
 
 int main() {
    srand(time(NULL));
+
    deleteFileIfExists("temp.txt");
    RankingData *ranking = malloc(sizeof(RankingData));
    loadRanking(ranking);
+
    printMainMenu(ranking);
 
    saveRanking(ranking);

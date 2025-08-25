@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <math.h>
+#include <math.h> // usada para a função log10(), que é usada para contar a quantidade de algarismos em um número.
 
 #include "utils.h"
 #include "colors.h"
@@ -59,10 +59,10 @@ void printMainMenu(RankingData*ranking) {
                continue; 
 
             /* 
-            A função sscanf() tenta extrair um determinado tipo, expressado pelo "%d" de uma string. Retorna a quantidade de itens lidos com sucesso.
-            logo no caso abaixo se espera que seja 1, pois a variável size é somente 1 integer. Caso o usuário digite uma
+            A função sscanf() tenta extrair um determinado tipo de uma string, expressado pelo "%d" ou qualquer outro placeholder. Retorna a quantidade de itens lidos com sucesso.
+            logo no caso abaixo se espera que seja 1, pois a variável size é somente 1 integer. 
             */
-            if (sscanf(boardSize, "%d %c", &size, &extraChar) != 1) {
+            if (sscanf(boardSize, "%d %c", &size, &extraChar) != 1) { // Tenta extrair um int da string boardSize, o %c extrair os caractéres extra da string
                printf("Input inválido, por favor digite um número!\n");
                printf("Número: ");
             }
@@ -95,6 +95,7 @@ void printMainMenu(RankingData*ranking) {
       else if (!strcmp(move, "c")) {
          clearTerminal();
          char arquivo[MAX];
+
          do { 
             printf("Insira o nome do arquivo para carregar o jogo: ");
             scanf("%s", arquivo);
@@ -103,9 +104,10 @@ void printMainMenu(RankingData*ranking) {
 
             if (g == NULL)
                printf(BLUE(BOLD("Este arquivo não existe. Tente novamente!\n")));
-         } while (g == NULL);
+         } while (g == NULL); // loop enquanto o arquivo informado pelo usuário for inválido.
 
          printf("Bom jogo %s!\n", g->user.nome);
+
          startGame(&g->user, g->mat, g->previousState, g->size, ranking);
          freeMatrix(g->mat, g->size);
          if (g->previousState != NULL)
@@ -123,7 +125,6 @@ void printMainMenu(RankingData*ranking) {
          g = readData("temp.txt");
          saveData(g->mat, g->previousState, g->size, &g->user, arquivo2);
          free(g);
-
       }
       else if (!strcmp(move, "m")) {
          clearTerminal();
@@ -163,7 +164,8 @@ int getMaxDigits(int **mat, int size) {
    if (maxVal == 0)
       return 1;
 
-   return (int) log10(maxVal) + 1;
+   return (int) log10(maxVal) + 1; 
+   // Exemplo: o log10 de 1024 é aproximadamente 3, então somando +1 temos a quantidade de algarismos.
 }
 
 // Com o valor da função getMaxDigits(), calcula o tamanho necessário para printar a formatação certa da tabela.
@@ -182,7 +184,7 @@ void printBoard(int **mat, int size) {
    printf("   " TAB_TL);
    for (int j = 0; j < size; j++) {
       for (int k = 0; k < cellWidth; k++) 
-         printf(TAB_HOR);
+         printf(TAB_HOR); // Imprime a barra horizontal size * cellWidth vezes, pois depende do tamanho do tabuleiro e do tamanho da célula, que depende do maior número no tabuleiro.
       if (j < size - 1)
          printf(TAB_TJ);
    }
@@ -190,12 +192,14 @@ void printBoard(int **mat, int size) {
    printf(TAB_TR "\n");
 
    // Imprime as linhas do tabuleiro com a legenda de linhas (letras)
-   for (int i = 0; i < size; i++) {
+   for (int i = 0; i < size; i++) { // loop pelas linhas
       printf(" %c " TAB_VER, 'A' + i);
 
-      for (int j = 0; j < size; j++) {
+      for (int j = 0; j < size; j++) { // loop pelas colunas
          printf(" ");
-         char* color = getPieceColor(mat[i][j]);
+         char* color = getPieceColor(mat[i][j]); // obtem a cor correspondente a cada valor.
+
+         // Se o valor da célula for 0, somente imprime um espaço vazio n vezes, onde n é maxDigits.
          if (mat[i][j] == 0) 
             for (int k = 0; k < maxDigits; k++) 
                printf(" ");
@@ -263,6 +267,7 @@ char* getPieceColor(int value) {
    }
 }
 
+// função que aloca matrizes dinamicamente.
 int** createMatrix(int size) {
    int **mat;
    mat = malloc(size * sizeof(int *));
